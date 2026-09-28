@@ -1,6 +1,9 @@
 import { alpha, createTheme } from '@mui/material/styles'
 
 const theme = createTheme({
+  typography: {
+    fontFamily: '"Google Sans Flex", Arial, sans-serif',
+  },
   components: {
     MuiCssBaseline: {
       styleOverrides: (theme) => ({
