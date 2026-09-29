@@ -10,7 +10,7 @@ import {
   TextField,
   Typography,
 } from '@mui/material'
-import { Link as RouterLink } from 'react-router'
+import { Link as RouterLink, useNavigate } from 'react-router'
 import googleLogo from '../../assets/google.svg'
 import PasswordField from './PasswordField'
 import { validateAuth, type AuthValues } from './validation'
@@ -25,6 +25,7 @@ type Notice = {
 }
 
 export default function AuthPage({ mode }: AuthPageProps) {
+  const navigate = useNavigate()
   const isSignUp = mode === 'signup'
   const [values, setValues] = useState<AuthValues>({
     name: '',
@@ -85,12 +86,7 @@ export default function AuthPage({ mode }: AuthPageProps) {
 
     try {
       await Promise.resolve()
-      setNotice({
-        severity: 'info',
-        message: isSignUp
-          ? 'This is a UI preview. Account creation is not connected yet.'
-          : 'This is a UI preview. Sign in is not connected yet.',
-      })
+      navigate('/home')
     } catch {
       setNotice({
         severity: 'error',
@@ -118,11 +114,14 @@ export default function AuthPage({ mode }: AuthPageProps) {
       <Box sx={{ width: '100%', maxWidth: 440, py: 2 }}>
         <Typography
           variant="h5"
-          sx={{ mb: 3, textAlign: 'center', fontWeight: 700 }}
+          sx={{ mb: 3, textAlign: 'center', fontWeight: 700, color: 'primary.dark' }}
         >
-          journey<Box component="span" sx={{ color: 'primary.main' }}>.</Box>
+          Journey<Box component="span" sx={{ color: 'primary.main' }}>.</Box>
         </Typography>
-        <Paper variant="outlined" sx={{ p: { xs: 3, sm: 4 } }}>
+        <Paper
+          variant="outlined"
+          sx={{ p: { xs: 3, sm: 4 }, borderRadius: 2, boxShadow: 2 }}
+        >
           <Stack spacing={3}>
             <Box>
               <Typography

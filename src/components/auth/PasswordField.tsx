@@ -19,6 +19,15 @@ export default function PasswordField(props: TextFieldProps) {
                 aria-pressed={visible}
                 onClick={() => setVisible(!visible)}
                 edge="end"
+                sx={{
+                  borderRadius: 0.8,
+                  minWidth: 44,
+                  minHeight: 40,
+                  '&.Mui-focusVisible': {
+                    outline: '2px solid',
+                    outlineColor: 'primary.main',
+                  },
+                }}
               >
                 <Typography variant="caption" component="span">
                   {visible ? 'Hide' : 'Show'}
