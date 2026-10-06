@@ -1,7 +1,6 @@
 import { useRef, useState, type FormEvent } from 'react'
-import { Link as RouterLink, useSearchParams } from 'react-router'
+import { Link as RouterLink, useLocation, useNavigate, useSearchParams } from 'react-router'
 import {
-  Alert,
   Box,
   Button,
   Container,
@@ -16,7 +15,7 @@ import {
 import { ArrowLeft, ArrowRight, Sparkles } from 'lucide'
 import LucideIcon from '../components/LucideIcon'
 import { destinations, previewUser } from '../components/home/data'
-import { stepLabels, validateStep, type JourneyPlan } from '../components/plan/model'
+import { readPlanState, stepLabels, validateStep, type JourneyPlan } from '../components/plan/model'
 import {
   DestinationStep,
   DatesTravelersStep,
@@ -35,8 +34,12 @@ const introductions = [
 const stepComponents = [DestinationStep, DatesTravelersStep, TravelStyleStep, InterestsStep]
 
 export default function PlanJourneyPage() {
+  const navigate = useNavigate()
+  const location = useLocation()
+  const restoredPlan = readPlanState(location.state)
   const [params] = useSearchParams()
   const [values, setValues] = useState<JourneyPlan>(() => {
+    if (restoredPlan) return restoredPlan
     const selected = destinations.find((item) => item.id === params.get('destination'))
     return {
       origin: previewUser.location,
@@ -50,9 +53,8 @@ export default function PlanJourneyPage() {
       interests: [],
     }
   })
-  const [activeStep, setActiveStep] = useState(0)
+  const [activeStep, setActiveStep] = useState(restoredPlan ? 4 : 0)
   const [attempted, setAttempted] = useState(false)
-  const [generated, setGenerated] = useState(false)
   const headingRef = useRef<HTMLHeadingElement>(null)
   const errors = attempted ? validateStep(values, activeStep) : {}
   const CurrentStep = stepComponents[activeStep]
@@ -60,7 +62,6 @@ export default function PlanJourneyPage() {
   function changeStep(step: number) {
     setActiveStep(step)
     setAttempted(false)
-    setGenerated(false)
     requestAnimationFrame(() => headingRef.current?.focus())
   }
 
@@ -88,7 +89,7 @@ export default function PlanJourneyPage() {
         changeStep(invalidStep)
         setAttempted(true)
       } else {
-        setGenerated(true)
+        navigate('/plan/generating', { state: { plan: values } })
       }
     }
   }
@@ -137,11 +138,6 @@ export default function PlanJourneyPage() {
               errors={errors}
               onChange={(patch) => setValues((current) => ({ ...current, ...patch }))}
             />
-          )}
-          {generated && (
-            <Alert severity="info" role="status" sx={{ mt: 3 }}>
-              Your preferences are ready. Journey generation isn't connected yet. No trip has been generated or saved.
-            </Alert>
           )}
           <Stack
             direction="row"

@@ -20,6 +20,31 @@ export type JourneyPlan = {
 }
 export type PlanErrors = Partial<Record<keyof JourneyPlan, string>>
 
+export function readPlanState(state: unknown): JourneyPlan | null {
+  if (!state || typeof state !== 'object' || !('plan' in state)) return null
+  const plan = state.plan
+  if (!plan || typeof plan !== 'object') return null
+  const value = plan as Partial<JourneyPlan>
+  if (
+    typeof value.origin !== 'string' ||
+    typeof value.destination !== 'string' ||
+    typeof value.startDate !== 'string' ||
+    typeof value.endDate !== 'string' ||
+    !Number.isFinite(Date.parse(`${value.startDate}T00:00:00`)) ||
+    !Number.isFinite(Date.parse(`${value.endDate}T00:00:00`)) ||
+    typeof value.travelers !== 'number' ||
+    typeof value.budget !== 'string' ||
+    !tripTypes.includes(value.tripType!) ||
+    !travelStyles.some((style) => style.label === value.travelStyle) ||
+    !Array.isArray(value.interests) ||
+    !value.interests.every((interest) => typeof interest === 'string')
+  ) return null
+  const validated = value as JourneyPlan
+  return [0, 1, 2, 3].every((step) => !Object.keys(validateStep(validated, step)).length)
+    ? validated
+    : null
+}
+
 export function validateStep(values: JourneyPlan, step: number): PlanErrors {
   const errors: PlanErrors = {}
   if (step === 0) {
