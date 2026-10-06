@@ -9,14 +9,25 @@ import {
   Typography,
 } from '@mui/material'
 import { alpha } from '@mui/material/styles'
-import { Link as RouterLink, useLocation } from 'react-router'
+import { useEffect } from 'react'
+import { Link as RouterLink, useLocation, useNavigate } from 'react-router'
 import { ArrowLeft, Check, Circle, CircleCheck, LoaderCircle, Sparkles } from 'lucide'
 import LucideIcon from '../components/LucideIcon'
 import { readPlanState, type JourneyPlan } from '../components/plan/model'
 import { generationStages, useGenerationPreview } from '../components/generation/useGenerationPreview'
 
 function GenerationExperience({ plan }: { plan: JourneyPlan }) {
+  const navigate = useNavigate()
   const { completedStages, progress, complete } = useGenerationPreview()
+
+  useEffect(() => {
+    if (!complete) return
+    const timer = window.setTimeout(
+      () => navigate('/journey/preview', { state: { plan }, replace: true }),
+      1200,
+    )
+    return () => window.clearTimeout(timer)
+  }, [complete, navigate, plan])
   const dateFormatter = new Intl.DateTimeFormat('en-IN', { dateStyle: 'medium' })
   const budget = new Intl.NumberFormat('en-IN', {
     style: 'currency',
@@ -44,7 +55,7 @@ function GenerationExperience({ plan }: { plan: JourneyPlan }) {
         </Typography>
         <Typography color="text.secondary" variant="body2" sx={{ overflowWrap: 'anywhere' }}>
           {complete
-            ? 'This preview is complete. Journey Overview will be implemented next.'
+            ? 'Taking you to your trip...'
             : `We're creating a personalized trip to ${plan.destination} based on your preferences.`}
         </Typography>
         <Typography variant="caption" color="text.secondary">
@@ -106,7 +117,7 @@ function GenerationExperience({ plan }: { plan: JourneyPlan }) {
         })}
       </Stack>
       <Typography role="status" variant="body2" sx={{ mt: 3, mb: 1, textAlign: 'center' }}>
-        {complete ? 'Preview complete — 100%' : `${progress}% complete · ${generationStages[completedStages].label}`}
+        {complete ? 'Journey ready — 100%' : `${progress}% complete · ${generationStages[completedStages].label}`}
       </Typography>
       <LinearProgress
         variant="determinate"
@@ -121,7 +132,7 @@ function GenerationExperience({ plan }: { plan: JourneyPlan }) {
         }}
       />
       <Typography variant="caption" color="text.secondary" sx={{ display: 'block', textAlign: 'center', mt: 2 }}>
-        {complete ? 'No itinerary has been generated or saved.' : 'This preview takes just a few moments.'}
+        {complete ? 'This is a simulated journey. Nothing has been booked or saved.' : 'This preview takes just a few moments.'}
       </Typography>
       <Box sx={{ textAlign: 'center', mt: 2 }}>
         <Button
