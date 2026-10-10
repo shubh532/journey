@@ -12,6 +12,8 @@ import {
 } from '@mui/material'
 import { Link as RouterLink, useNavigate } from 'react-router'
 import googleLogo from '../../assets/google.svg'
+import { ApiError } from '../../services/apiError'
+import { authApi } from '../../services/authApi'
 import PasswordField from './PasswordField'
 import { validateAuth, type AuthValues } from './validation'
 
@@ -85,12 +87,19 @@ export default function AuthPage({ mode }: AuthPageProps) {
     setIsSubmitting(true)
 
     try {
-      await Promise.resolve()
+      if (isSignUp) {
+        await authApi.register(values.name, values.email, values.password)
+      } else {
+        await authApi.login(values.email, values.password)
+      }
       navigate('/home')
-    } catch {
+    } catch (error) {
       setNotice({
         severity: 'error',
-        message: 'Something went wrong. Please try again.',
+        message:
+          error instanceof ApiError
+            ? error.message
+            : 'Something went wrong. Please try again.',
       })
     } finally {
       submitting.current = false

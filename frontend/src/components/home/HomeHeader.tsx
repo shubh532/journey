@@ -1,5 +1,4 @@
 import {
-  Avatar,
   Box,
   Container,
   InputAdornment,
@@ -10,6 +9,7 @@ import {
 import { MapPin, Search } from 'lucide'
 import { alpha } from '@mui/material/styles'
 import LucideIcon from '../LucideIcon'
+import ProfileMenu from './ProfileMenu'
 import { previewUser } from './data'
 
 type HomeHeaderProps = {
@@ -85,22 +85,7 @@ export default function HomeHeader({ search, onSearchChange }: HomeHeaderProps) 
               <LucideIcon node={MapPin} />
               <Typography variant="body2">{previewUser.location}</Typography>
             </Stack>
-            <Stack direction="row" spacing={1} sx={{ alignItems: 'center' }}>
-              <Avatar
-                aria-label={previewUser.name}
-                sx={(theme) => ({
-                  width: 36,
-                  height: 36,
-                  fontSize: theme.typography.body2.fontSize,
-                  fontWeight: 600,
-                })}
-              >
-                {previewUser.initials}
-              </Avatar>
-              <Typography variant="body2" sx={{ fontWeight: 600 }}>
-                {previewUser.name}
-              </Typography>
-            </Stack>
+            <ProfileMenu />
           </Stack>
           <Stack
             direction="row"
