@@ -1,9 +1,11 @@
 import { useMemo, useState } from 'react'
 import { Link as RouterLink, useLocation } from 'react-router'
-import { Alert, Avatar, Box, Button, Container, Paper, Snackbar, Stack, Typography } from '@mui/material'
-import { ArrowLeft } from 'lucide'
+import { Box, Button, Container, Paper, Snackbar, Stack } from '@mui/material'
+import { ArrowLeft, Hammer, Route } from 'lucide'
 import LucideIcon from '../components/LucideIcon'
-import { previewUser } from '../components/home/data'
+import AppHeader from '../components/layout/AppHeader'
+import EmptyState from '../components/layout/EmptyState'
+import PageShell from '../components/layout/PageShell'
 import { readPlanState } from '../components/plan/model'
 import { buildJourneyOverview } from '../components/journey/overview'
 import JourneyHero from '../components/journey/JourneyHero'
@@ -17,6 +19,7 @@ import {
   StayPreviewCard,
   TripSnapshot,
 } from '../components/journey/OverviewSections'
+import motion from '../theme/motion.module.css'
 
 const gridSx = {
   display: 'grid',
@@ -34,49 +37,50 @@ export default function JourneyOverviewPage() {
 
   if (!overview) {
     return (
-      <Container component="main" maxWidth="sm" sx={{ py: { xs: 3, sm: 5 } }}>
+      <PageShell>
         <title>Journey | Journey</title>
-        <Paper variant="outlined" sx={{ p: 3 }}>
-          <Typography component="h1" variant="h5" sx={{ mb: 2 }}>Let's plan your journey first</Typography>
-          <Alert severity="info" sx={{ mb: 2 }}>
-            There's no generated journey to show yet. Complete the planner to preview one.
-          </Alert>
-          <Button component={RouterLink} to="/plan" variant="contained">Go to planning</Button>
-        </Paper>
-      </Container>
+        <AppHeader maxWidth="md" />
+        <Container component="main" maxWidth="sm" sx={{ py: { xs: 3, sm: 6 }, flex: 1 }}>
+          <Paper variant="outlined" sx={{ p: { xs: 2, sm: 3 } }}>
+            <EmptyState
+              headingComponent="h1"
+              icon={Route}
+              title="Let's plan your journey first"
+              description="There's no generated journey to show yet. Complete the planner to preview one."
+              action={<Button component={RouterLink} to="/plan" variant="contained">Go to planning</Button>}
+            />
+          </Paper>
+        </Container>
+      </PageShell>
     )
   }
 
   const activeLabel = workspaceTabs.find((tab) => tab.id === activeTab)?.label
 
   return (
-    <Box sx={{ minHeight: '100svh' }}>
+    <PageShell>
       <title>{`${overview.title} | Journey`}</title>
-      <Box component="header" sx={{ bgcolor: 'background.paper', borderBottom: 1, borderColor: 'divider' }}>
-        <Container maxWidth="lg" sx={{ py: 2, display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 2 }}>
-          <Typography variant="h5" sx={{ color: 'primary.dark', fontWeight: 700 }}>Journey.</Typography>
-          <Stack direction="row" spacing={2} sx={{ alignItems: 'center' }}>
-            <Button component={RouterLink} to="/home" startIcon={<LucideIcon node={ArrowLeft} />}>Home</Button>
-            <Avatar aria-label={previewUser.name} sx={{ width: 36, height: 36, fontSize: '0.875rem' }}>
-              {previewUser.initials}
-            </Avatar>
-          </Stack>
-        </Container>
-      </Box>
+      <AppHeader
+        actions={
+          <Button component={RouterLink} to="/home" startIcon={<LucideIcon node={ArrowLeft} />}>Home</Button>
+        }
+      />
       <Container component="main" maxWidth="lg" sx={{ pt: { xs: 3, md: 5 } }}>
-        <JourneyHero
-          overview={overview}
-          onModify={() => setNotice('Conversational editing is coming soon.')}
-          onShare={() => setNotice('Sharing is coming soon.')}
-        />
+        <Box className={motion.fadeUp}>
+          <JourneyHero
+            overview={overview}
+            onModify={() => setNotice('Conversational editing is coming soon.')}
+            onShare={() => setNotice('Sharing is coming soon.')}
+          />
+        </Box>
       </Container>
       <Box sx={{ mt: { xs: 3, md: 4 } }}>
         <WorkspaceTabs value={activeTab} onChange={setActiveTab} />
       </Box>
-      <Container maxWidth="lg" sx={{ py: { xs: 3, md: 5 } }}>
+      <Container maxWidth="lg" sx={{ py: { xs: 3, md: 5 }, flex: 1 }}>
         <Box role="tabpanel" id="workspace-panel" aria-labelledby={`workspace-tab-${activeTab}`}>
           {activeTab === 'overview' ? (
-            <Box sx={gridSx}>
+            <Box sx={gridSx} className={motion.fadeUp}>
               <ItineraryPreview overview={overview} onNavigate={setActiveTab} />
               <Stack spacing={3}>
                 <TripSnapshot overview={overview} />
@@ -89,12 +93,13 @@ export default function JourneyOverviewPage() {
               </Box>
             </Box>
           ) : (
-            <Paper variant="outlined" sx={{ p: 4, textAlign: 'center' }}>
-              <Typography component="h2" variant="h6">{activeLabel} is coming soon</Typography>
-              <Typography color="text.secondary" sx={{ mt: 1, mb: 2 }}>
-                This section of your journey is still being built.
-              </Typography>
-              <Button onClick={() => setActiveTab('overview')}>Back to overview</Button>
+            <Paper variant="outlined">
+              <EmptyState
+                icon={Hammer}
+                title={`${activeLabel} is coming soon`}
+                description="This section of your journey is still being built."
+                action={<Button onClick={() => setActiveTab('overview')}>Back to overview</Button>}
+              />
             </Paper>
           )}
         </Box>
@@ -106,6 +111,6 @@ export default function JourneyOverviewPage() {
         message={notice}
         anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
       />
-    </Box>
+    </PageShell>
   )
 }

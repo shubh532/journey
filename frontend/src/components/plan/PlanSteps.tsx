@@ -70,27 +70,37 @@ export function DatesTravelersStep({ values, errors, onChange }: StepProps) {
         <Typography component="h3" variant="subtitle2" sx={{ mb: 1 }}>Travelers</Typography>
         <Stack direction="row" spacing={2} sx={{ alignItems: 'center' }}>
           <LucideIcon node={Users} />
-          <IconButton
-            type="button"
-            aria-label="Remove traveler"
-            disabled={values.travelers <= 1}
-            onClick={() => onChange({ travelers: values.travelers - 1 })}
-            sx={{ minWidth: 44, minHeight: 44 }}
+          <Stack
+            direction="row"
+            sx={{ alignItems: 'center', border: 1, borderColor: 'divider', borderRadius: 999, bgcolor: 'background.paper', boxShadow: 1 }}
           >
-            <LucideIcon node={Minus} />
-          </IconButton>
-          <Typography aria-live="polite">{values.travelers}</Typography>
-          <IconButton
-            type="button"
-            aria-label="Add traveler"
-            disabled={values.travelers >= 10}
-            onClick={() => onChange({ travelers: values.travelers + 1 })}
-            sx={{ minWidth: 44, minHeight: 44 }}
-          >
-            <LucideIcon node={Plus} />
-          </IconButton>
+            <IconButton
+              type="button"
+              aria-label="Remove traveler"
+              disabled={values.travelers <= 1}
+              onClick={() => onChange({ travelers: values.travelers - 1 })}
+            >
+              <LucideIcon node={Minus} />
+            </IconButton>
+            <Typography aria-live="polite" sx={{ minWidth: 32, textAlign: 'center', fontWeight: 600 }}>
+              {values.travelers}
+            </Typography>
+            <IconButton
+              type="button"
+              aria-label="Add traveler"
+              disabled={values.travelers >= 10}
+              onClick={() => onChange({ travelers: values.travelers + 1 })}
+            >
+              <LucideIcon node={Plus} />
+            </IconButton>
+          </Stack>
           <Typography variant="caption" color="text.secondary">Up to 10</Typography>
         </Stack>
+        {errors.travelers && (
+          <Typography role="alert" variant="caption" color="error" sx={{ display: 'block', mt: 1 }}>
+            {errors.travelers}
+          </Typography>
+        )}
       </Box>
       <Box role="group" aria-label="Trip type">
         <Typography component="h3" variant="subtitle2" sx={{ mb: 1.5 }}>Who's coming along?</Typography>

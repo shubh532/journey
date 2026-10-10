@@ -26,11 +26,15 @@ export default function PlanChoice({ label, description, icon, selected, onClick
         minHeight: 56,
         height: '100%',
         borderColor: selected ? 'primary.main' : 'divider',
+        backgroundImage: selected
+          ? `linear-gradient(135deg, ${alpha(theme.palette.primary.main, 0.1)}, ${alpha(theme.palette.secondary.main, 0.06)})`
+          : 'none',
         bgcolor: selected ? alpha(theme.palette.primary.main, 0.06) : 'background.paper',
         color: selected ? 'primary.dark' : 'text.primary',
+        boxShadow: selected ? `0 0 0 3px ${alpha(theme.palette.primary.main, 0.12)}` : theme.shadows[1],
         '&:hover': {
           borderColor: 'primary.main',
-          bgcolor: alpha(theme.palette.primary.main, 0.04),
+          bgcolor: alpha(theme.palette.primary.main, 0.05),
         },
       })}
     >

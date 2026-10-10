@@ -1,15 +1,7 @@
-import {
-  Box,
-  Container,
-  InputAdornment,
-  Stack,
-  TextField,
-  Typography,
-} from '@mui/material'
+import { Box, InputAdornment, TextField, Typography } from '@mui/material'
 import { MapPin, Search } from 'lucide'
-import { alpha } from '@mui/material/styles'
+import AppHeader from '../layout/AppHeader'
 import LucideIcon from '../LucideIcon'
-import ProfileMenu from './ProfileMenu'
 import { previewUser } from './data'
 
 type HomeHeaderProps = {
@@ -19,95 +11,49 @@ type HomeHeaderProps = {
 
 export default function HomeHeader({ search, onSearchChange }: HomeHeaderProps) {
   return (
-    <Box
-      component="header"
-      sx={(theme) => ({
-        bgcolor: alpha(theme.palette.background.paper, 0.9),
-        borderBottom: 1,
-        borderColor: 'divider',
-        backdropFilter: 'blur(12px)',
-      })}
-    >
-      <Container maxWidth="lg">
+    <AppHeader
+      search={
+        <TextField
+          placeholder="Search destinations..."
+          value={search}
+          onChange={(event) => onSearchChange(event.target.value)}
+          fullWidth
+          slotProps={{
+            htmlInput: { 'aria-label': 'Search destinations' },
+            input: {
+              startAdornment: (
+                <InputAdornment position="start">
+                  <LucideIcon node={Search} />
+                </InputAdornment>
+              ),
+            },
+          }}
+        />
+      }
+      actions={
         <Box
+          role="note"
+          aria-label={`Your location: ${previewUser.location}`}
           sx={{
-            display: 'grid',
-            gridTemplateColumns: { xs: '1fr auto', md: 'auto minmax(0, 1fr) auto' },
+            display: 'flex',
             alignItems: 'center',
-            gap: { xs: 2, md: 4 },
-            py: 3,
+            gap: 1,
+            color: 'text.secondary',
+            bgcolor: 'background.paper',
+            border: 1,
+            borderColor: 'divider',
+            borderRadius: 999,
+            boxShadow: 1,
+            px: { xs: 1, sm: 1.5 },
+            py: 0.75,
           }}
         >
-          <Typography variant="h5" sx={{ fontWeight: 700, color: 'primary.dark' }}>
-            Journey<Box component="span" sx={{ color: 'primary.main' }}>.</Box>
+          <LucideIcon node={MapPin} />
+          <Typography variant="body2" sx={{ display: { xs: 'none', sm: 'block' } }}>
+            {previewUser.location}
           </Typography>
-          <TextField
-            placeholder="Search destinations..."
-            value={search}
-            onChange={(event) => onSearchChange(event.target.value)}
-            fullWidth
-            sx={{
-              gridRow: { xs: 2, md: 1 },
-              gridColumn: { xs: '1 / -1', md: 2 },
-              '& .MuiOutlinedInput-root': { minHeight: 44 },
-            }}
-            slotProps={{
-              htmlInput: { 'aria-label': 'Search destinations' },
-              input: {
-                startAdornment: (
-                  <InputAdornment position="start">
-                    <LucideIcon node={Search} />
-                  </InputAdornment>
-                ),
-              },
-            }}
-          />
-          <Stack
-            direction="row"
-            spacing={3}
-            sx={{ alignItems: 'center', gridRow: 1, gridColumn: { xs: 2, md: 3 } }}
-          >
-            <Stack
-              direction="row"
-              spacing={1}
-              sx={{
-                alignItems: 'center',
-                color: 'text.secondary',
-                display: { xs: 'none', sm: 'flex' },
-                bgcolor: 'background.default',
-                border: 1,
-                borderColor: 'divider',
-                borderRadius: 1,
-                px: 1.5,
-                py: 1,
-              }}
-            >
-              <LucideIcon node={MapPin} />
-              <Typography variant="body2">{previewUser.location}</Typography>
-            </Stack>
-            <ProfileMenu />
-          </Stack>
-          <Stack
-            direction="row"
-            spacing={1}
-            sx={{
-              alignItems: 'center',
-              color: 'text.secondary',
-              display: { xs: 'flex', sm: 'none' },
-              gridColumn: '1 / -1',
-              justifySelf: 'start',
-              bgcolor: 'background.default',
-              borderRadius: 1,
-              px: 1.5,
-              py: 0.75,
-            }}
-          >
-            <LucideIcon node={MapPin} />
-            <Typography variant="body2">{previewUser.location}</Typography>
-          </Stack>
         </Box>
-      </Container>
-    </Box>
+      }
+    />
   )
 }
-

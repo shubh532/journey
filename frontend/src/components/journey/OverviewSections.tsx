@@ -1,26 +1,14 @@
-import type { ReactNode } from 'react'
-import { Box, Button, Chip, Divider, Paper, Stack, Typography } from '@mui/material'
+import { Box, Button, Chip, Divider, Stack, Typography } from '@mui/material'
 import { alpha } from '@mui/material/styles'
 import { ArrowRight, CalendarDays, Compass, Plane, Sparkles, Star, Users } from 'lucide'
 import LucideIcon from '../LucideIcon'
-import PlaceImage from './PlaceImage'
+import ImageWithFallback from '../layout/ImageWithFallback'
+import SectionCard from '../layout/SectionCard'
 import { formatCurrency, type JourneyOverview } from './overview'
 import type { WorkspaceTabId } from './workspace'
 
 type SectionProps = { overview: JourneyOverview }
 type NavigableSectionProps = SectionProps & { onNavigate: (tab: WorkspaceTabId) => void }
-
-function SectionCard({ title, action, children }: { title: string; action?: ReactNode; children: ReactNode }) {
-  return (
-    <Paper component="section" variant="outlined" sx={{ p: { xs: 2.5, md: 3 }, borderRadius: 2 }}>
-      <Stack direction="row" sx={{ alignItems: 'center', justifyContent: 'space-between', gap: 2, mb: 2.5 }}>
-        <Typography component="h2" variant="h6">{title}</Typography>
-        {action}
-      </Stack>
-      {children}
-    </Paper>
-  )
-}
 
 function LinkButton({ label, onClick }: { label: string; onClick: () => void }) {
   return (
@@ -41,8 +29,28 @@ export function ItineraryPreview({ overview, onNavigate }: NavigableSectionProps
           return (
             <Box component="li" key={item.day} sx={{ display: 'flex', gap: 2 }}>
               <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-                <Box sx={{ width: 12, height: 12, mt: 0.75, borderRadius: '50%', bgcolor: 'primary.main', flexShrink: 0 }} />
-                {!last && <Box sx={{ width: 2, flex: 1, bgcolor: 'divider' }} />}
+                <Box
+                  sx={(theme) => ({
+                    width: 12,
+                    height: 12,
+                    mt: 0.75,
+                    borderRadius: '50%',
+                    bgcolor: 'primary.main',
+                    flexShrink: 0,
+                    boxShadow: `0 0 0 4px ${alpha(theme.palette.primary.main, 0.14)}`,
+                  })}
+                />
+                {!last && (
+                  <Box
+                    sx={(theme) => ({
+                      width: 2,
+                      flex: 1,
+                      mt: 0.5,
+                      borderRadius: 1,
+                      backgroundImage: `linear-gradient(${alpha(theme.palette.primary.main, 0.35)}, ${theme.palette.divider})`,
+                    })}
+                  />
+                )}
               </Box>
               <Box sx={{ pb: last ? 0 : 2.5 }}>
                 <Typography variant="caption" color="text.secondary">Day {item.day}</Typography>
@@ -74,7 +82,7 @@ export function FlightPreviewCard({ overview, onNavigate }: NavigableSectionProp
   return (
     <SectionCard title="Recommended Flight" action={<LinkButton label="View flights" onClick={() => onNavigate('flights')} />}>
       <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>{flight.airline}</Typography>
-      <Box sx={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1fr) auto minmax(0, 1fr)', alignItems: 'center', gap: 2 }}>
+      <Box sx={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1fr) auto minmax(0, 1fr)', alignItems: 'center', gap: { xs: 1, sm: 2 } }}>
         {endpoint(flight.originCode, flight.originCity, flight.departure, 'left')}
         <Stack sx={{ alignItems: 'center', color: 'text.secondary' }}>
           <LucideIcon node={Plane} />
@@ -102,7 +110,7 @@ export function StayPreviewCard({ overview, onNavigate }: NavigableSectionProps)
   return (
     <SectionCard title="Your Stay" action={<LinkButton label="View hotels" onClick={() => onNavigate('hotels')} />}>
       <Box sx={{ aspectRatio: '16 / 9', borderRadius: 1, overflow: 'hidden', mb: 2 }}>
-        <PlaceImage src={hotel.image} alt={hotel.imageAlt} label={`${hotel.name} · Image unavailable`} />
+        <ImageWithFallback src={hotel.image} alt={hotel.imageAlt} label={`${hotel.name} · Image unavailable`} />
       </Box>
       <Stack direction="row" sx={{ alignItems: 'baseline', justifyContent: 'space-between', gap: 2 }}>
         <Typography variant="h6" sx={{ overflowWrap: 'anywhere' }}>{hotel.name}</Typography>
@@ -148,13 +156,32 @@ export function TripSnapshot({ overview }: SectionProps) {
   )
 }
 
+const budgetColors = ['primary.dark', 'primary.main', 'primary.light', 'secondary.main', 'secondary.light']
+
 export function BudgetSnapshot({ overview }: SectionProps) {
+  const total = overview.budgetBreakdown.reduce((sum, item) => sum + item.amount, 0)
+
   return (
     <SectionCard title="Budget Snapshot">
+      <Box
+        role="img"
+        aria-label="Budget split by category"
+        sx={{ display: 'flex', height: 8, gap: '2px', borderRadius: 999, overflow: 'hidden', mb: 2.5 }}
+      >
+        {overview.budgetBreakdown.map((item, index) => (
+          <Box
+            key={item.label}
+            sx={{ flex: total > 0 ? item.amount / total : 1, minWidth: 2, bgcolor: budgetColors[index % budgetColors.length] }}
+          />
+        ))}
+      </Box>
       <Stack spacing={1.25} component="dl" sx={{ m: 0 }}>
-        {overview.budgetBreakdown.map((item) => (
-          <Stack key={item.label} direction="row" sx={{ justifyContent: 'space-between', gap: 2 }}>
-            <Typography component="dt" variant="body2" color="text.secondary">{item.label}</Typography>
+        {overview.budgetBreakdown.map((item, index) => (
+          <Stack key={item.label} direction="row" sx={{ justifyContent: 'space-between', alignItems: 'center', gap: 2 }}>
+            <Stack direction="row" spacing={1.25} sx={{ alignItems: 'center' }}>
+              <Box aria-hidden="true" sx={{ width: 8, height: 8, borderRadius: '50%', bgcolor: budgetColors[index % budgetColors.length] }} />
+              <Typography component="dt" variant="body2" color="text.secondary">{item.label}</Typography>
+            </Stack>
             <Typography component="dd" variant="body2" sx={{ m: 0 }}>{formatCurrency(item.amount)}</Typography>
           </Stack>
         ))}

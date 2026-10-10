@@ -1,7 +1,7 @@
 import { Box, Button, Chip, LinearProgress, Paper, Stack, Typography } from '@mui/material'
 import { CalendarDays, Share2, Sparkles, Users } from 'lucide'
 import LucideIcon from '../LucideIcon'
-import PlaceImage from './PlaceImage'
+import ImageWithFallback from '../layout/ImageWithFallback'
 import { formatCurrency, type JourneyOverview } from './overview'
 
 const dateFormatter = new Intl.DateTimeFormat('en-IN', { day: 'numeric', month: 'short' })
@@ -19,10 +19,10 @@ export default function JourneyHero({ overview, onModify, onShare }: JourneyHero
   const used = Math.min(Math.round((estimatedCost / budget) * 100), 100)
 
   return (
-    <Paper variant="outlined" sx={{ overflow: 'hidden', borderRadius: 2 }}>
+    <Paper variant="outlined" sx={{ overflow: 'hidden', borderRadius: 2.5 }}>
       <Box sx={{ display: 'grid', gridTemplateColumns: { xs: 'minmax(0, 1fr)', md: 'minmax(0, 2fr) minmax(0, 3fr)' } }}>
         <Box sx={{ aspectRatio: { xs: '16 / 9', md: 'auto' }, minHeight: { md: 280 } }}>
-          <PlaceImage
+          <ImageWithFallback
             src={overview.coverImage?.src}
             alt={overview.coverImage?.alt ?? ''}
             label={`${plan.destination} · Image unavailable`}
@@ -37,7 +37,7 @@ export default function JourneyHero({ overview, onModify, onShare }: JourneyHero
             sx={{ alignSelf: 'flex-start' }}
           />
           <Box>
-            <Typography component="h1" variant="h4" sx={{ fontSize: { xs: '1.8rem', md: '2.4rem' }, overflowWrap: 'anywhere' }}>
+            <Typography component="h1" variant="h3" sx={{ overflowWrap: 'anywhere' }}>
               {overview.title}
             </Typography>
             <Typography color="text.secondary" sx={{ mt: 0.5, overflowWrap: 'anywhere' }}>
@@ -59,17 +59,17 @@ export default function JourneyHero({ overview, onModify, onShare }: JourneyHero
             </Stack>
           </Stack>
           <Stack direction="row" sx={{ flexWrap: 'wrap', gap: 1.5 }}>
-            <Button variant="contained" onClick={onModify} startIcon={<LucideIcon node={Sparkles} />} sx={{ minHeight: 44 }}>
+            <Button variant="contained" onClick={onModify} startIcon={<LucideIcon node={Sparkles} />}>
               Modify Journey
             </Button>
-            <Button variant="outlined" onClick={onShare} startIcon={<LucideIcon node={Share2} />} sx={{ minHeight: 44 }}>
+            <Button variant="outlined" onClick={onShare} startIcon={<LucideIcon node={Share2} />}>
               Share
             </Button>
           </Stack>
         </Stack>
       </Box>
       <Box sx={{ p: { xs: 2.5, md: 3 }, borderTop: 1, borderColor: 'divider', bgcolor: 'background.default' }}>
-        <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(3, minmax(0, 1fr))', gap: 2 }}>
+        <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: 2 }}>
           <Box>
             <Typography variant="caption" color="text.secondary">Estimated Trip Cost</Typography>
             <Typography variant="h6" sx={{ color: 'primary.dark' }}>{formatCurrency(estimatedCost)}</Typography>
@@ -90,7 +90,7 @@ export default function JourneyHero({ overview, onModify, onShare }: JourneyHero
           value={used}
           color={remaining < 0 ? 'error' : 'primary'}
           aria-label="Share of budget used by estimated cost"
-          sx={{ height: 6, borderRadius: 1, mt: 2, bgcolor: 'divider' }}
+          sx={{ mt: 2 }}
         />
         <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mt: 1 }}>
           {formatCurrency(estimatedCost)} of {formatCurrency(budget)} · {used}% of budget used · estimated, not a booking price

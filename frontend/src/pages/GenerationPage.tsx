@@ -1,5 +1,4 @@
 import {
-  Alert,
   Box,
   Button,
   Container,
@@ -11,8 +10,11 @@ import {
 import { alpha } from '@mui/material/styles'
 import { useEffect } from 'react'
 import { Link as RouterLink, useLocation, useNavigate } from 'react-router'
-import { ArrowLeft, Check, Circle, CircleCheck, LoaderCircle, Sparkles } from 'lucide'
+import { ArrowLeft, Check, Circle, CircleCheck, LoaderCircle, Route, Sparkles } from 'lucide'
 import LucideIcon from '../components/LucideIcon'
+import EmptyState from '../components/layout/EmptyState'
+import PageShell from '../components/layout/PageShell'
+import Wordmark from '../components/layout/Wordmark'
 import { readPlanState, type JourneyPlan } from '../components/plan/model'
 import { generationStages, useGenerationPreview } from '../components/generation/useGenerationPreview'
 
@@ -36,21 +38,22 @@ function GenerationExperience({ plan }: { plan: JourneyPlan }) {
   }).format(Number(plan.budget))
 
   return (
-    <Paper variant="outlined" sx={{ p: { xs: 2.5, sm: 4 }, borderRadius: 2 }}>
+    <Paper variant="outlined" sx={{ p: { xs: 2.5, sm: 4 } }}>
       <Stack spacing={2} sx={{ alignItems: 'center', textAlign: 'center' }}>
         <Box
           sx={(theme) => ({
             display: 'grid',
             placeItems: 'center',
             p: 2,
-            borderRadius: 2,
+            borderRadius: 3,
             color: 'primary.main',
-            bgcolor: alpha(theme.palette.primary.main, 0.08),
+            backgroundImage: `linear-gradient(135deg, ${alpha(theme.palette.primary.main, 0.14)}, ${alpha(theme.palette.secondary.main, 0.1)})`,
+            border: `1px solid ${alpha(theme.palette.primary.main, 0.18)}`,
           })}
         >
           <LucideIcon node={complete ? CircleCheck : Sparkles} />
         </Box>
-        <Typography component="h1" variant="h4" sx={{ fontSize: { xs: '1.7rem', sm: '2rem' } }}>
+        <Typography component="h1" variant="h4">
           {complete ? 'Your journey is ready' : 'Building your journey'}
         </Typography>
         <Typography color="text.secondary" variant="body2" sx={{ overflowWrap: 'anywhere' }}>
@@ -124,8 +127,6 @@ function GenerationExperience({ plan }: { plan: JourneyPlan }) {
         value={progress}
         aria-label="Journey generation preview progress"
         sx={{
-          height: 6,
-          borderRadius: 1,
           '@media (prefers-reduced-motion: reduce)': {
             '& .MuiLinearProgress-bar': { transition: 'none' },
           },
@@ -154,22 +155,26 @@ export default function GenerationPage() {
   const plan = readPlanState(location.state)
 
   return (
-    <Container component="main" maxWidth="sm" sx={{ py: { xs: 3, sm: 5 } }}>
+    <PageShell>
       <title>Building your journey | Journey</title>
-      <Typography variant="h5" sx={{ textAlign: 'center', color: 'primary.dark', fontWeight: 700, mb: 3 }}>
-        Journey.
-      </Typography>
-      {plan ? (
-        <GenerationExperience key={location.key} plan={plan} />
-      ) : (
-        <Paper variant="outlined" sx={{ p: 3 }}>
-          <Typography component="h1" variant="h5" sx={{ mb: 2 }}>Let's plan your journey first</Typography>
-          <Alert severity="info" sx={{ mb: 2 }}>
-            Your planning details aren't available. Complete the planner to preview generation.
-          </Alert>
-          <Button component={RouterLink} to="/plan" variant="contained">Go to planning</Button>
-        </Paper>
-      )}
-    </Container>
+      <Container component="main" maxWidth="sm" sx={{ py: { xs: 3, sm: 6 }, flex: 1 }}>
+        <Box sx={{ textAlign: 'center', mb: 3 }}>
+          <Wordmark to="/home" />
+        </Box>
+        {plan ? (
+          <GenerationExperience key={location.key} plan={plan} />
+        ) : (
+          <Paper variant="outlined" sx={{ p: { xs: 2, sm: 3 } }}>
+            <EmptyState
+              headingComponent="h1"
+              icon={Route}
+              title="Let's plan your journey first"
+              description="Your planning details aren't available. Complete the planner to preview generation."
+              action={<Button component={RouterLink} to="/plan" variant="contained">Go to planning</Button>}
+            />
+          </Paper>
+        )}
+      </Container>
+    </PageShell>
   )
 }

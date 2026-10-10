@@ -23,6 +23,9 @@ import {
   InterestsStep,
 } from '../components/plan/PlanSteps'
 import ReviewStep from '../components/plan/ReviewStep'
+import AppHeader from '../components/layout/AppHeader'
+import PageShell from '../components/layout/PageShell'
+import motion from '../theme/motion.module.css'
 
 const introductions = [
   ['Where are you going?', 'Choose where your journey starts and where you want to explore.'],
@@ -95,16 +98,14 @@ export default function PlanJourneyPage() {
   }
 
   return (
-    <Box sx={{ minHeight: '100svh' }}>
+    <PageShell>
       <title>Plan your journey | Journey</title>
-      <Box component="header" sx={{ bgcolor: 'background.paper', borderBottom: 1, borderColor: 'divider' }}>
-        <Container maxWidth="md" sx={{ py: 2, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-          <Typography variant="h5" sx={{ color: 'primary.dark', fontWeight: 700 }}>Journey.</Typography>
-          <Button component={RouterLink} to="/home" startIcon={<LucideIcon node={ArrowLeft} />}>Home</Button>
-        </Container>
-      </Box>
-      <Container component="main" maxWidth="md" sx={{ py: { xs: 3, md: 5 } }}>
-        <Typography component="h1" variant="h4" sx={{ mb: 1 }}>Plan your journey</Typography>
+      <AppHeader
+        maxWidth="md"
+        actions={<Button component={RouterLink} to="/home" startIcon={<LucideIcon node={ArrowLeft} />}>Home</Button>}
+      />
+      <Container component="main" maxWidth="md" sx={{ py: { xs: 3, md: 5 }, flex: 1 }}>
+        <Typography component="h1" variant="h3" sx={{ mb: 1 }}>Plan your journey</Typography>
         <Typography color="text.secondary" sx={{ mb: 4 }}>Tell us what you're looking for.</Typography>
         <Stepper activeStep={activeStep} alternativeLabel sx={{ display: { xs: 'none', md: 'flex' }, mb: 4 }}>
           {stepLabels.map((label) => <Step key={label}><StepLabel>{label}</StepLabel></Step>)}
@@ -118,27 +119,29 @@ export default function PlanJourneyPage() {
           variant="outlined"
           noValidate
           onSubmit={handleSubmit}
-          sx={{ p: { xs: 2.5, sm: 4 }, borderRadius: 2 }}
+          sx={{ p: { xs: 2.5, sm: 4 } }}
         >
-          <Typography
-            ref={headingRef}
-            tabIndex={-1}
-            component="h2"
-            variant="h5"
-            sx={{ mb: 1, '&:focus': { outlineColor: 'primary.main' } }}
-          >
-            {introductions[activeStep][0]}
-          </Typography>
-          <Typography color="text.secondary" variant="body2" sx={{ mb: 3 }}>{introductions[activeStep][1]}</Typography>
-          {activeStep === 4 ? (
-            <ReviewStep values={values} onEdit={changeStep} />
-          ) : (
-            <CurrentStep
-              values={values}
-              errors={errors}
-              onChange={(patch) => setValues((current) => ({ ...current, ...patch }))}
-            />
-          )}
+          <Box key={activeStep} className={motion.fadeUp}>
+            <Typography
+              ref={headingRef}
+              tabIndex={-1}
+              component="h2"
+              variant="h5"
+              sx={{ mb: 1, '&:focus': { outlineColor: 'primary.main' } }}
+            >
+              {introductions[activeStep][0]}
+            </Typography>
+            <Typography color="text.secondary" variant="body2" sx={{ mb: 3 }}>{introductions[activeStep][1]}</Typography>
+            {activeStep === 4 ? (
+              <ReviewStep values={values} onEdit={changeStep} />
+            ) : (
+              <CurrentStep
+                values={values}
+                errors={errors}
+                onChange={(patch) => setValues((current) => ({ ...current, ...patch }))}
+              />
+            )}
+          </Box>
           <Stack
             direction="row"
             sx={{
@@ -157,7 +160,7 @@ export default function PlanJourneyPage() {
             <Button
               type="submit"
               variant="contained"
-              sx={{ ml: 'auto', minHeight: 44 }}
+              sx={{ ml: 'auto' }}
               endIcon={<LucideIcon node={activeStep === 4 ? Sparkles : ArrowRight} />}
             >
               {activeStep === 4 ? 'Generate My Journey' : 'Continue'}
@@ -165,6 +168,6 @@ export default function PlanJourneyPage() {
           </Stack>
         </Paper>
       </Container>
-    </Box>
+    </PageShell>
   )
 }

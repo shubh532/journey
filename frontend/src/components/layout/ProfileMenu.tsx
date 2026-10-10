@@ -1,13 +1,5 @@
 import { useEffect, useState } from 'react'
-import {
-  Avatar,
-  Box,
-  Button,
-  Divider,
-  IconButton,
-  Popover,
-  Typography,
-} from '@mui/material'
+import { Avatar, Box, Divider, IconButton, ListItemIcon, Menu, MenuItem, Skeleton, Tooltip, Typography } from '@mui/material'
 import { LogOut } from 'lucide'
 import { useNavigate } from 'react-router'
 import LucideIcon from '../LucideIcon'
@@ -25,6 +17,7 @@ function getInitials(name: string) {
 export default function ProfileMenu() {
   const navigate = useNavigate()
   const [user, setUser] = useState<CurrentUser | null>(null)
+  const [loadFailed, setLoadFailed] = useState(false)
   const [anchorEl, setAnchorEl] = useState<HTMLElement | null>(null)
   const [isLoggingOut, setIsLoggingOut] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -36,7 +29,9 @@ export default function ProfileMenu() {
       .then((currentUser) => {
         if (active) setUser(currentUser)
       })
-      .catch(() => undefined)
+      .catch(() => {
+        if (active) setLoadFailed(true)
+      })
     return () => {
       active = false
     }
@@ -44,6 +39,7 @@ export default function ProfileMenu() {
 
   const open = Boolean(anchorEl)
   const initials = user ? getInitials(user.fullName) : ''
+  const loading = !user && !loadFailed
 
   function handleClose() {
     setAnchorEl(null)
@@ -65,18 +61,24 @@ export default function ProfileMenu() {
 
   return (
     <>
-      <IconButton
-        onClick={(event) => setAnchorEl(event.currentTarget)}
-        aria-label="Open profile menu"
-        aria-haspopup="true"
-        aria-expanded={open}
-        sx={{ p: 0.5 }}
-      >
-        <Avatar sx={{ width: 36, height: 36, fontSize: 14, fontWeight: 600 }}>
-          {initials}
-        </Avatar>
-      </IconButton>
-      <Popover
+      <Tooltip title="Account">
+        <IconButton
+          onClick={(event) => setAnchorEl(event.currentTarget)}
+          aria-label="Open account menu"
+          aria-haspopup="menu"
+          aria-expanded={open}
+          aria-controls={open ? 'account-menu' : undefined}
+          sx={{ p: 0.5 }}
+        >
+          {loading ? (
+            <Skeleton variant="circular" width={36} height={36} />
+          ) : (
+            <Avatar sx={{ width: 36, height: 36, fontSize: 14 }}>{initials}</Avatar>
+          )}
+        </IconButton>
+      </Tooltip>
+      <Menu
+        id="account-menu"
         open={open}
         anchorEl={anchorEl}
         onClose={handleClose}
@@ -84,36 +86,28 @@ export default function ProfileMenu() {
         transformOrigin={{ vertical: 'top', horizontal: 'right' }}
         slotProps={{ paper: { sx: { mt: 1, width: 280 } } }}
       >
-        <Box sx={{ display: 'flex', gap: 1.5, alignItems: 'center', p: 2 }}>
-          <Avatar sx={{ width: 44, height: 44, fontWeight: 600 }}>{initials}</Avatar>
+        <Box role="presentation" sx={{ display: 'flex', gap: 1.5, alignItems: 'center', px: 2, py: 1.5 }}>
+          <Avatar sx={{ width: 44, height: 44 }}>{initials}</Avatar>
           <Box sx={{ minWidth: 0 }}>
-            <Typography variant="body1" noWrap sx={{ fontWeight: 600 }}>
-              {user?.fullName ?? 'Signed in'}
+            <Typography noWrap sx={{ fontWeight: 600 }}>
+              {user?.fullName ?? (loadFailed ? 'Account unavailable' : 'Loading...')}
             </Typography>
-            <Typography variant="body2" noWrap sx={{ color: 'text.secondary' }}>
-              {user?.email}
+            <Typography variant="body2" noWrap color="text.secondary">
+              {user?.email ?? (loadFailed ? 'Could not load your profile.' : '')}
             </Typography>
           </Box>
         </Box>
-        <Divider />
-        <Box sx={{ p: 1 }}>
-          <Button
-            fullWidth
-            color="inherit"
-            onClick={handleLogout}
-            disabled={isLoggingOut}
-            startIcon={<LucideIcon node={LogOut} />}
-            sx={{ justifyContent: 'flex-start' }}
-          >
-            {isLoggingOut ? 'Signing out...' : 'Log out'}
-          </Button>
-          {error && (
-            <Typography variant="caption" color="error" sx={{ px: 1 }}>
-              {error}
-            </Typography>
-          )}
-        </Box>
-      </Popover>
+        <Divider sx={{ my: 0.5 }} />
+        <MenuItem onClick={handleLogout} disabled={isLoggingOut}>
+          <ListItemIcon><LucideIcon node={LogOut} /></ListItemIcon>
+          {isLoggingOut ? 'Signing out...' : 'Log out'}
+        </MenuItem>
+        {error && (
+          <Typography role="alert" variant="caption" color="error" sx={{ display: 'block', px: 2, py: 0.5 }}>
+            {error}
+          </Typography>
+        )}
+      </Menu>
     </>
   )
 }

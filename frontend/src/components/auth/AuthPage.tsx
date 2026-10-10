@@ -10,12 +10,24 @@ import {
   TextField,
   Typography,
 } from '@mui/material'
+import { alpha } from '@mui/material/styles'
 import { Link as RouterLink, useNavigate } from 'react-router'
+import { Route, Sparkles, WalletCards } from 'lucide'
 import googleLogo from '../../assets/google.svg'
+import LucideIcon from '../LucideIcon'
+import Wordmark from '../layout/Wordmark'
+import { brandGradient, glassSurface } from '../../theme/tokens'
+import motion from '../../theme/motion.module.css'
 import { ApiError } from '../../services/apiError'
 import { authApi } from '../../services/authApi'
 import PasswordField from './PasswordField'
 import { validateAuth, type AuthValues } from './validation'
+
+const brandPoints = [
+  { icon: Sparkles, label: 'Itineraries shaped around your interests' },
+  { icon: WalletCards, label: 'A budget you can see from the very start' },
+  { icon: Route, label: 'One workspace for your whole trip' },
+]
 
 type AuthPageProps = {
   mode: 'signin' | 'signup'
@@ -115,28 +127,92 @@ export default function AuthPage({ mode }: AuthPageProps) {
       sx={{
         minHeight: '100svh',
         display: 'grid',
-        placeItems: 'center',
-        p: { xs: 2, sm: 3 },
+        gridTemplateColumns: { xs: 'minmax(0, 1fr)', md: 'minmax(0, 1fr) minmax(0, 1fr)' },
       }}
     >
       <title>{isSignUp ? 'Create account' : 'Sign in'} | Journey</title>
-      <Box sx={{ width: '100%', maxWidth: 440, py: 2 }}>
-        <Typography
-          variant="h5"
-          sx={{ mb: 3, textAlign: 'center', fontWeight: 700, color: 'primary.dark' }}
-        >
-          Journey<Box component="span" sx={{ color: 'primary.main' }}>.</Box>
+      <Box
+        sx={(theme) => ({
+          display: { xs: 'none', md: 'flex' },
+          position: 'relative',
+          overflow: 'hidden',
+          flexDirection: 'column',
+          justifyContent: 'space-between',
+          p: { md: 6, lg: 8 },
+          color: 'common.white',
+          backgroundImage: brandGradient(theme),
+        })}
+      >
+        <Box
+          aria-hidden="true"
+          className={motion.floatGlow}
+          sx={(theme) => ({
+            position: 'absolute',
+            width: 520,
+            height: 520,
+            top: '-12%',
+            right: '-18%',
+            borderRadius: '50%',
+            background: `radial-gradient(circle, ${alpha(theme.palette.common.white, 0.22)}, transparent 65%)`,
+          })}
+        />
+        <Box
+          aria-hidden="true"
+          sx={(theme) => ({
+            position: 'absolute',
+            width: 420,
+            height: 420,
+            bottom: '-14%',
+            left: '-10%',
+            borderRadius: '50%',
+            background: `radial-gradient(circle, ${alpha(theme.palette.secondary.light, 0.35)}, transparent 65%)`,
+          })}
+        />
+        <Wordmark size="lg" light />
+        <Box sx={{ position: 'relative', maxWidth: 460 }}>
+          <Typography component="p" variant="h2" sx={{ mb: 3 }}>
+            Plan trips that feel made for you.
+          </Typography>
+          <Stack component="ul" spacing={2} sx={{ listStyle: 'none', p: 0, m: 0 }}>
+            {brandPoints.map((point) => (
+              <Stack component="li" key={point.label} direction="row" spacing={1.5} sx={{ alignItems: 'center' }}>
+                <Box
+                  sx={(theme) => ({
+                    display: 'grid',
+                    placeItems: 'center',
+                    width: 36,
+                    height: 36,
+                    borderRadius: 2,
+                    bgcolor: alpha(theme.palette.common.white, 0.16),
+                    border: `1px solid ${alpha(theme.palette.common.white, 0.24)}`,
+                  })}
+                >
+                  <LucideIcon node={point.icon} />
+                </Box>
+                <Typography sx={{ opacity: 0.92 }}>{point.label}</Typography>
+              </Stack>
+            ))}
+          </Stack>
+        </Box>
+        <Typography variant="caption" sx={{ position: 'relative', opacity: 0.8 }}>
+          Your next chapter starts here.
         </Typography>
-        <Paper
-          variant="outlined"
-          sx={{ p: { xs: 3, sm: 4 }, borderRadius: 2, boxShadow: 2 }}
-        >
+      </Box>
+      <Box sx={{ display: 'grid', placeItems: 'center', p: { xs: 2, sm: 3 } }}>
+        <Box sx={{ width: '100%', maxWidth: 440, py: 2 }} className={motion.fadeUp}>
+          <Box sx={{ display: { xs: 'block', md: 'none' }, textAlign: 'center', mb: 3 }}>
+            <Wordmark size="lg" />
+          </Box>
+          <Paper
+            variant="outlined"
+            sx={(theme) => ({ ...glassSurface(theme), p: { xs: 3, sm: 4 }, borderRadius: 5 })}
+          >
           <Stack spacing={3}>
             <Box>
               <Typography
                 component="h1"
-                variant="h5"
-                sx={{ fontWeight: 650, mb: 1 }}
+                variant="h4"
+                sx={{ mb: 1 }}
               >
                 {isSignUp ? 'Create your account' : 'Welcome back'}
               </Typography>
@@ -151,7 +227,6 @@ export default function AuthPage({ mode }: AuthPageProps) {
               variant="outlined"
               fullWidth
               startIcon={<img src={googleLogo} alt="" width={18} height={18} />}
-              sx={{ textTransform: 'none' }}
               onClick={() =>
                 setNotice({
                   severity: 'info',
@@ -250,14 +325,8 @@ export default function AuthPage({ mode }: AuthPageProps) {
               </Link>
             </Typography>
           </Stack>
-        </Paper>
-        <Typography
-          variant="caption"
-          color="text.secondary"
-          sx={{ display: 'block', textAlign: 'center', mt: 3 }}
-        >
-          Your next chapter starts here.
-        </Typography>
+          </Paper>
+        </Box>
       </Box>
     </Box>
   )

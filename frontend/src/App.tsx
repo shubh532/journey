@@ -5,6 +5,7 @@ import HomePage from './pages/HomePage'
 import PlanJourneyPage from './pages/PlanJourneyPage'
 import GenerationPage from './pages/GenerationPage'
 import JourneyOverviewPage from './pages/JourneyOverviewPage'
+import NotFoundPage from './pages/NotFoundPage'
 
 export default function App() {
   return (
@@ -17,6 +18,7 @@ export default function App() {
         <Route path="/plan" element={<PlanJourneyPage />} />
         <Route path="/plan/generating" element={<GenerationPage />} />
         <Route path="/journey/preview" element={<JourneyOverviewPage />} />
+        <Route path="*" element={<NotFoundPage />} />
       </Routes>
     </BrowserRouter>
   )
