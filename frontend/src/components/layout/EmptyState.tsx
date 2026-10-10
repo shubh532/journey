@@ -29,7 +29,7 @@ export default function EmptyState({
           height: 56,
           display: 'grid',
           placeItems: 'center',
-          borderRadius: 3,
+          borderRadius: '12px',
           color: 'primary.main',
           backgroundImage: `linear-gradient(135deg, ${alpha(theme.palette.primary.main, 0.12)}, ${alpha(theme.palette.secondary.main, 0.08)})`,
           border: `1px solid ${alpha(theme.palette.primary.main, 0.16)}`,

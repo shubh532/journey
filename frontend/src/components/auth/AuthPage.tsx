@@ -182,7 +182,7 @@ export default function AuthPage({ mode }: AuthPageProps) {
                     placeItems: 'center',
                     width: 36,
                     height: 36,
-                    borderRadius: 2,
+                    borderRadius: '8px',
                     bgcolor: alpha(theme.palette.common.white, 0.16),
                     border: `1px solid ${alpha(theme.palette.common.white, 0.24)}`,
                   })}
@@ -205,7 +205,7 @@ export default function AuthPage({ mode }: AuthPageProps) {
           </Box>
           <Paper
             variant="outlined"
-            sx={(theme) => ({ ...glassSurface(theme), p: { xs: 3, sm: 4 }, borderRadius: 5 })}
+            sx={(theme) => ({ ...glassSurface(theme), p: { xs: 3, sm: 4 }, borderRadius: '14px' })}
           >
           <Stack spacing={3}>
             <Box>

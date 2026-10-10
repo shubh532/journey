@@ -1,6 +1,6 @@
 import { alpha, type Theme } from '@mui/material/styles'
 
-export const radii = { control: 10, card: 16, hero: 20 } as const
+export const radii = { control: 8, card: 10, hero: 12 } as const
 
 export const brandGradient = (theme: Theme) =>
   `linear-gradient(135deg, ${theme.palette.primary.dark} 0%, ${theme.palette.primary.main} 55%, ${theme.palette.secondary.main} 100%)`

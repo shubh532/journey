@@ -1,75 +1,13 @@
-import { Box, Button, Chip, Divider, Stack, Typography } from '@mui/material'
-import { alpha } from '@mui/material/styles'
-import { ArrowRight, CalendarDays, Compass, Plane, Sparkles, Star, Users } from 'lucide'
+import { Box, Chip, Divider, Stack, Typography } from '@mui/material'
+import { Plane, Star } from 'lucide'
 import LucideIcon from '../LucideIcon'
 import ImageWithFallback from '../layout/ImageWithFallback'
 import SectionCard from '../layout/SectionCard'
 import { formatCurrency, type JourneyOverview } from './overview'
-import type { WorkspaceTabId } from './workspace'
 
 type SectionProps = { overview: JourneyOverview }
-type NavigableSectionProps = SectionProps & { onNavigate: (tab: WorkspaceTabId) => void }
 
-function LinkButton({ label, onClick }: { label: string; onClick: () => void }) {
-  return (
-    <Button onClick={onClick} endIcon={<LucideIcon node={ArrowRight} />} sx={{ flexShrink: 0 }}>
-      {label}
-    </Button>
-  )
-}
-
-export function ItineraryPreview({ overview, onNavigate }: NavigableSectionProps) {
-  const { itineraryPreview, hiddenDays } = overview
-
-  return (
-    <SectionCard title="Your Itinerary" action={<LinkButton label="View full itinerary" onClick={() => onNavigate('itinerary')} />}>
-      <Stack component="ol" sx={{ listStyle: 'none', p: 0, m: 0 }}>
-        {itineraryPreview.map((item, index) => {
-          const last = index === itineraryPreview.length - 1
-          return (
-            <Box component="li" key={item.day} sx={{ display: 'flex', gap: 2 }}>
-              <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-                <Box
-                  sx={(theme) => ({
-                    width: 12,
-                    height: 12,
-                    mt: 0.75,
-                    borderRadius: '50%',
-                    bgcolor: 'primary.main',
-                    flexShrink: 0,
-                    boxShadow: `0 0 0 4px ${alpha(theme.palette.primary.main, 0.14)}`,
-                  })}
-                />
-                {!last && (
-                  <Box
-                    sx={(theme) => ({
-                      width: 2,
-                      flex: 1,
-                      mt: 0.5,
-                      borderRadius: 1,
-                      backgroundImage: `linear-gradient(${alpha(theme.palette.primary.main, 0.35)}, ${theme.palette.divider})`,
-                    })}
-                  />
-                )}
-              </Box>
-              <Box sx={{ pb: last ? 0 : 2.5 }}>
-                <Typography variant="caption" color="text.secondary">Day {item.day}</Typography>
-                <Typography sx={{ fontWeight: 600, overflowWrap: 'anywhere' }}>{item.title}</Typography>
-              </Box>
-            </Box>
-          )
-        })}
-      </Stack>
-      {hiddenDays > 0 && (
-        <Typography variant="body2" color="text.secondary" sx={{ mt: 2 }}>
-          + {hiddenDays} more {hiddenDays === 1 ? 'day' : 'days'} in the full itinerary
-        </Typography>
-      )}
-    </SectionCard>
-  )
-}
-
-export function FlightPreviewCard({ overview, onNavigate }: NavigableSectionProps) {
+export function FlightPreviewCard({ overview }: SectionProps) {
   const { flight } = overview
   const endpoint = (code: string, city: string, time: string, align: 'left' | 'right') => (
     <Box sx={{ textAlign: align, minWidth: 0 }}>
@@ -80,7 +18,7 @@ export function FlightPreviewCard({ overview, onNavigate }: NavigableSectionProp
   )
 
   return (
-    <SectionCard title="Recommended Flight" action={<LinkButton label="View flights" onClick={() => onNavigate('flights')} />}>
+    <SectionCard title="Recommended Flight">
       <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>{flight.airline}</Typography>
       <Box sx={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1fr) auto minmax(0, 1fr)', alignItems: 'center', gap: { xs: 1, sm: 2 } }}>
         {endpoint(flight.originCode, flight.originCity, flight.departure, 'left')}
@@ -104,11 +42,11 @@ export function FlightPreviewCard({ overview, onNavigate }: NavigableSectionProp
   )
 }
 
-export function StayPreviewCard({ overview, onNavigate }: NavigableSectionProps) {
+export function StayPreviewCard({ overview }: SectionProps) {
   const { hotel } = overview
 
   return (
-    <SectionCard title="Your Stay" action={<LinkButton label="View hotels" onClick={() => onNavigate('hotels')} />}>
+    <SectionCard title="Your Stay">
       <Box sx={{ aspectRatio: '16 / 9', borderRadius: 1, overflow: 'hidden', mb: 2 }}>
         <ImageWithFallback src={hotel.image} alt={hotel.imageAlt} label={`${hotel.name} · Image unavailable`} />
       </Box>
@@ -130,28 +68,6 @@ export function StayPreviewCard({ overview, onNavigate }: NavigableSectionProps)
       <Typography variant="caption" color="text.secondary">
         {formatCurrency(hotel.pricePerNight * hotel.nights)} estimated for {hotel.nights} {hotel.nights === 1 ? 'night' : 'nights'}
       </Typography>
-    </SectionCard>
-  )
-}
-
-export function TripSnapshot({ overview }: SectionProps) {
-  const { plan, days } = overview
-  const facts = [
-    { icon: CalendarDays, label: `${days} ${days === 1 ? 'Day' : 'Days'}` },
-    { icon: Users, label: `${plan.travelers} ${plan.travelers === 1 ? 'Traveler' : 'Travelers'} · ${plan.tripType}` },
-    { icon: Compass, label: `${plan.travelStyle} travel` },
-  ]
-
-  return (
-    <SectionCard title="Trip Snapshot">
-      <Stack spacing={1.5}>
-        {facts.map((fact) => (
-          <Stack key={fact.label} direction="row" spacing={1.5} sx={{ alignItems: 'center' }}>
-            <Box sx={{ color: 'primary.main', display: 'flex' }}><LucideIcon node={fact.icon} /></Box>
-            <Typography variant="body2">{fact.label}</Typography>
-          </Stack>
-        ))}
-      </Stack>
     </SectionCard>
   )
 }
@@ -190,29 +106,6 @@ export function BudgetSnapshot({ overview }: SectionProps) {
       <Stack direction="row" sx={{ justifyContent: 'space-between', gap: 2 }}>
         <Typography sx={{ fontWeight: 600 }}>Estimated</Typography>
         <Typography sx={{ fontWeight: 600, color: 'primary.dark' }}>{formatCurrency(overview.estimatedCost)}</Typography>
-      </Stack>
-    </SectionCard>
-  )
-}
-
-export function PersonalizedInterests({ overview }: SectionProps) {
-  return (
-    <SectionCard title="Planned around what you love">
-      <Stack direction="row" sx={{ flexWrap: 'wrap', gap: 1, mb: 2.5 }}>
-        {overview.plan.interests.map((interest) => (
-          <Chip key={interest} label={interest} color="primary" variant="outlined" />
-        ))}
-      </Stack>
-      <Stack
-        direction="row"
-        spacing={1.5}
-        sx={(theme) => ({ p: 2, borderRadius: 1, bgcolor: alpha(theme.palette.primary.main, 0.06) })}
-      >
-        <Box sx={{ color: 'primary.main', display: 'flex', pt: 0.25 }}><LucideIcon node={Sparkles} /></Box>
-        <Box>
-          <Typography variant="body2" sx={{ fontWeight: 600 }}>Planned for you</Typography>
-          <Typography variant="body2" color="text.secondary">{overview.summary}</Typography>
-        </Box>
       </Stack>
     </SectionCard>
   )

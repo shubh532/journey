@@ -1,4 +1,3 @@
-export const stepLabels = ['Destination', 'Dates & Travelers', 'Budget & Style', 'Interests', 'Review']
 export const tripTypes = ['Solo', 'Couple', 'Family', 'Friends'] as const
 export const travelStyles = [
   { label: 'Budget', description: 'Make the most of every rupee' },

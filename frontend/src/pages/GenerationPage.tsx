@@ -45,7 +45,7 @@ function GenerationExperience({ plan }: { plan: JourneyPlan }) {
             display: 'grid',
             placeItems: 'center',
             p: 2,
-            borderRadius: 3,
+            borderRadius: '12px',
             color: 'primary.main',
             backgroundImage: `linear-gradient(135deg, ${alpha(theme.palette.primary.main, 0.14)}, ${alpha(theme.palette.secondary.main, 0.1)})`,
             border: `1px solid ${alpha(theme.palette.primary.main, 0.18)}`,

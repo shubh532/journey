@@ -5,13 +5,14 @@ import ProfileMenu from './ProfileMenu'
 import Wordmark from './Wordmark'
 
 type AppHeaderProps = {
-  maxWidth?: 'md' | 'lg'
+  maxWidth?: 'md' | 'lg' | 'xl' | false
+  nav?: ReactNode
   search?: ReactNode
   actions?: ReactNode
-  extra?: ReactNode
+  showProfileName?: boolean
 }
 
-export default function AppHeader({ maxWidth = 'lg', search, actions, extra }: AppHeaderProps) {
+export default function AppHeader({ maxWidth = 'lg', nav, search, actions, showProfileName = false }: AppHeaderProps) {
   return (
     <Box
       component="header"
@@ -31,17 +32,30 @@ export default function AppHeader({ maxWidth = 'lg', search, actions, extra }: A
           sx={{
             display: 'grid',
             gridTemplateColumns: search
-              ? { xs: '1fr auto', md: 'auto minmax(0, 1fr) auto' }
-              : '1fr auto',
+              ? { xs: '1fr auto', md: nav ? 'auto auto minmax(0, 1fr) auto' : 'auto minmax(0, 1fr) auto' }
+              : nav
+                ? { xs: '1fr auto', md: 'auto 1fr auto' }
+                : '1fr auto',
             alignItems: 'center',
             columnGap: { xs: 2, md: 4 },
             rowGap: 1.5,
-            py: { xs: 1.5, md: 2 },
+            py: { xs: 1.25, md: 1.5 },
           }}
         >
-          <Wordmark to="/home" />
+          <Box sx={{ gridColumn: 1, gridRow: 1 }}>
+            <Wordmark to="/home" />
+          </Box>
+          {nav && <Box sx={{ display: { xs: 'none', md: 'block' }, gridColumn: { md: 2 }, gridRow: 1 }}>{nav}</Box>}
           {search && (
-            <Box sx={{ gridRow: { xs: 2, md: 1 }, gridColumn: { xs: '1 / -1', md: 2 } }}>
+            <Box
+              sx={{
+                gridRow: { xs: 2, md: 1 },
+                gridColumn: { xs: '1 / -1', md: nav ? 3 : 2 },
+                justifySelf: { md: 'end' },
+                width: '100%',
+                maxWidth: { md: 360 },
+              }}
+            >
               {search}
             </Box>
           )}
@@ -49,15 +63,15 @@ export default function AppHeader({ maxWidth = 'lg', search, actions, extra }: A
             sx={{
               display: 'flex',
               alignItems: 'center',
-              gap: 2,
+              gap: 1.5,
               gridRow: 1,
-              gridColumn: { xs: 2, md: search ? 3 : 2 },
+              gridColumn: { xs: 2, md: search ? (nav ? 4 : 3) : nav ? 3 : 2 },
+              justifySelf: 'end',
             }}
           >
             {actions}
-            <ProfileMenu />
+            <ProfileMenu showName={showProfileName} />
           </Box>
-          {extra && <Box sx={{ gridColumn: '1 / -1' }}>{extra}</Box>}
         </Box>
       </Container>
     </Box>

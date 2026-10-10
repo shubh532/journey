@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Avatar, Box, Divider, IconButton, ListItemIcon, Menu, MenuItem, Skeleton, Tooltip, Typography } from '@mui/material'
-import { LogOut } from 'lucide'
+import { ChevronDown, LogOut } from 'lucide'
 import { useNavigate } from 'react-router'
 import LucideIcon from '../LucideIcon'
 import { authApi, type CurrentUser } from '../../services/authApi'
@@ -14,7 +14,7 @@ function getInitials(name: string) {
     .join('')
 }
 
-export default function ProfileMenu() {
+export default function ProfileMenu({ showName = false }: { showName?: boolean }) {
   const navigate = useNavigate()
   const [user, setUser] = useState<CurrentUser | null>(null)
   const [loadFailed, setLoadFailed] = useState(false)
@@ -68,12 +68,20 @@ export default function ProfileMenu() {
           aria-haspopup="menu"
           aria-expanded={open}
           aria-controls={open ? 'account-menu' : undefined}
-          sx={{ p: 0.5 }}
+          sx={{ p: 0.5, borderRadius: '999px' }}
         >
           {loading ? (
             <Skeleton variant="circular" width={36} height={36} />
           ) : (
             <Avatar sx={{ width: 36, height: 36, fontSize: 14 }}>{initials}</Avatar>
+          )}
+          {showName && user && (
+            <Box component="span" sx={{ display: { xs: 'none', lg: 'inline-flex' }, alignItems: 'center', gap: 0.5, ml: 1, mr: 0.5 }}>
+              <Typography component="span" variant="body2" sx={{ fontWeight: 500 }}>
+                {user.fullName.split(/\s+/)[0]}
+              </Typography>
+              <LucideIcon node={ChevronDown} />
+            </Box>
           )}
         </IconButton>
       </Tooltip>

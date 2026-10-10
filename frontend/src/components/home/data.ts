@@ -6,6 +6,7 @@ export type Destination = {
   image: string
   imageAlt: string
   category: 'domestic' | 'international'
+  tags: string[]
   packagePrice: number
   persons: number
   days: number
@@ -13,15 +14,6 @@ export type Destination = {
 }
 
 export const previewUser = { name: 'Shubham', initials: 'S', location: 'Ahmedabad' }
-
-export const navigationItems = [
-  { id: 'upcoming', label: 'Upcoming Journey' },
-  { id: 'history', label: 'History' },
-  { id: 'domestic', label: 'Domestic' },
-  { id: 'international', label: 'International' },
-] as const
-
-export type NavigationId = (typeof navigationItems)[number]['id']
 
 export const destinations: Destination[] = [
   {
@@ -36,6 +28,7 @@ export const destinations: Destination[] = [
     image: 'https://images.unsplash.com/photo-1512343879784-a960bf40e7f2?auto=format&fit=crop&w=800&q=80',
     imageAlt: 'Palm-lined beach and coastal scenery in Goa',
     category: 'domestic',
+    tags: ['Beaches', 'Nightlife', 'Food', 'Family'],
   },
   {
     id: 'manali',
@@ -49,6 +42,7 @@ export const destinations: Destination[] = [
     image: 'https://images.unsplash.com/photo-1626621341517-bbf3d9990a23?auto=format&fit=crop&w=800&q=80',
     imageAlt: 'Mountain landscape near Manali',
     category: 'domestic',
+    tags: ['Mountains', 'Adventure', 'Nature', 'Honeymoon'],
   },
   {
     id: 'kerala',
@@ -62,6 +56,7 @@ export const destinations: Destination[] = [
     image: 'https://images.unsplash.com/photo-1602216056096-3b40cc0c9944?auto=format&fit=crop&w=800&q=80',
     imageAlt: 'Lush green landscape and waterways in Kerala',
     category: 'domestic',
+    tags: ['Backwaters', 'Nature', 'Culture', 'Honeymoon', 'Family'],
   },
   {
     id: 'bali',
@@ -75,6 +70,7 @@ export const destinations: Destination[] = [
     image: 'https://images.unsplash.com/photo-1537996194471-e657df975ab4?auto=format&fit=crop&w=800&q=80',
     imageAlt: 'Traditional Balinese architecture surrounded by greenery',
     category: 'international',
+    tags: ['Beaches', 'Culture', 'Spiritual', 'Honeymoon'],
   },
   {
     id: 'dubai',
@@ -88,6 +84,7 @@ export const destinations: Destination[] = [
     image: 'https://images.unsplash.com/photo-1512453979798-5ea266f8880c?auto=format&fit=crop&w=800&q=80',
     imageAlt: 'Dubai skyline with modern towers',
     category: 'international',
+    tags: ['Luxury', 'Shopping', 'Skyline', 'Family'],
   },
   {
     id: 'paris',
@@ -101,5 +98,6 @@ export const destinations: Destination[] = [
     image: 'https://images.unsplash.com/photo-1502602898657-3e91760cbb34?auto=format&fit=crop&w=800&q=80',
     imageAlt: 'Eiffel Tower rising above Paris',
     category: 'international',
+    tags: ['Culture', 'Romance', 'Luxury', 'Honeymoon'],
   },
 ]

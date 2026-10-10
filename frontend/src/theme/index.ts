@@ -13,12 +13,12 @@ const reducedMotion = '@media (prefers-reduced-motion: reduce)'
 
 const theme = createTheme({
   palette: {
-    primary: { main: '#4f46e5', dark: '#3730a3', light: '#818cf8' },
-    secondary: { main: '#7c3aed' },
+    primary: { main: '#2563eb', dark: '#1e40af', light: '#60a5fa' },
+    secondary: { main: '#0891b2' },
     success: { main: '#047857' },
     warning: { main: '#b45309' },
     error: { main: '#dc2626' },
-    info: { main: '#4338ca' },
+    info: { main: '#1d4ed8' },
     background: { default: '#f6f7fb', paper: '#ffffff' },
     text: { primary: ink, secondary: '#475569' },
     divider: '#e2e8f0',
@@ -171,7 +171,7 @@ const theme = createTheme({
     MuiChip: {
       defaultProps: { size: 'small' },
       styleOverrides: {
-        root: ({ theme }) => ({ borderRadius: 8, fontWeight: 500, borderColor: theme.palette.divider }),
+        root: ({ theme }) => ({ borderRadius: 6, fontWeight: 500, borderColor: theme.palette.divider }),
         filled: ({ theme }) => ({
           backgroundColor: alpha(theme.palette.primary.main, 0.08),
           color: theme.palette.primary.dark,
@@ -228,7 +228,7 @@ const theme = createTheme({
     MuiToggleButtonGroup: { defaultProps: { size: 'small' } },
     MuiAlert: {
       styleOverrides: {
-        root: ({ theme }) => ({ borderRadius: 12, border: `1px solid ${theme.palette.divider}`, alignItems: 'center' }),
+        root: ({ theme }) => ({ borderRadius: 8, border: `1px solid ${theme.palette.divider}`, alignItems: 'center' }),
         standard: ({ theme, ownerState }) => {
           const tone = ownerState.severity ?? 'info'
           const color = theme.palette[tone]
@@ -241,12 +241,12 @@ const theme = createTheme({
       },
     },
     MuiSnackbarContent: {
-      styleOverrides: { root: { borderRadius: 12, backgroundColor: ink, boxShadow: shadows[4] } },
+      styleOverrides: { root: { borderRadius: 8, backgroundColor: ink, boxShadow: shadows[4] } },
     },
     MuiTooltip: {
       defaultProps: { arrow: true, enterDelay: 300 },
       styleOverrides: {
-        tooltip: { backgroundColor: ink, borderRadius: 8, fontSize: '0.75rem', fontWeight: 500, padding: '6px 10px' },
+        tooltip: { backgroundColor: ink, borderRadius: 6, fontSize: '0.75rem', fontWeight: 500, padding: '6px 10px' },
         arrow: { color: ink },
       },
     },
@@ -262,7 +262,7 @@ const theme = createTheme({
     MuiPopover: {
       styleOverrides: {
         paper: ({ theme }) => ({
-          borderRadius: 14,
+          borderRadius: radii.card,
           border: `1px solid ${theme.palette.divider}`,
           boxShadow: theme.shadows[4],
           backgroundImage: 'none',
@@ -272,7 +272,7 @@ const theme = createTheme({
     MuiMenu: {
       styleOverrides: {
         paper: ({ theme }) => ({
-          borderRadius: 14,
+          borderRadius: radii.card,
           border: `1px solid ${theme.palette.divider}`,
           boxShadow: theme.shadows[4],
         }),
@@ -281,7 +281,7 @@ const theme = createTheme({
     MuiMenuItem: {
       styleOverrides: {
         root: ({ theme }) => ({
-          borderRadius: 8,
+          borderRadius: 6,
           marginInline: theme.spacing(0.75),
           minHeight: 40,
         }),

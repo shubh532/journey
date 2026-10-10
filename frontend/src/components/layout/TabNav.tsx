@@ -47,7 +47,7 @@ export default function TabNav<T extends string>({
               icon={item.icon ? <LucideIcon node={item.icon} /> : undefined}
               iconPosition="start"
               aria-controls={panelId}
-              sx={{ px: { xs: 2, md: 2.5 } }}
+              sx={{ px: { xs: 2, md: 2.5 }, '& > svg': { mr: 1 } }}
             />
           ))}
         </Tabs>

@@ -1,40 +1,30 @@
-import { useRef, useState, type FormEvent } from 'react'
+import { useState, type FormEvent } from 'react'
 import { Link as RouterLink, useLocation, useNavigate, useSearchParams } from 'react-router'
-import {
-  Box,
-  Button,
-  Container,
-  LinearProgress,
-  Paper,
-  Stack,
-  Step,
-  StepLabel,
-  Stepper,
-  Typography,
-} from '@mui/material'
-import { ArrowLeft, ArrowRight, Sparkles } from 'lucide'
+import { Box, Button, Container, LinearProgress, Paper, Stack, Typography } from '@mui/material'
+import { alpha } from '@mui/material/styles'
+import { ArrowLeft, Check, Sparkles } from 'lucide'
 import LucideIcon from '../components/LucideIcon'
+import AppHeader from '../components/layout/AppHeader'
+import PageShell from '../components/layout/PageShell'
 import { destinations, previewUser } from '../components/home/data'
-import { readPlanState, stepLabels, validateStep, type JourneyPlan } from '../components/plan/model'
+import { readPlanState, validateStep, type JourneyPlan, type PlanErrors } from '../components/plan/model'
 import {
   DestinationStep,
   DatesTravelersStep,
   TravelStyleStep,
   InterestsStep,
 } from '../components/plan/PlanSteps'
-import ReviewStep from '../components/plan/ReviewStep'
-import AppHeader from '../components/layout/AppHeader'
-import PageShell from '../components/layout/PageShell'
+import PlanSummary from '../components/plan/PlanSummary'
 import motion from '../theme/motion.module.css'
 
-const introductions = [
-  ['Where are you going?', 'Choose where your journey starts and where you want to explore.'],
-  ['When are you traveling?', "Choose your travel dates and who's coming along."],
-  ["What's your travel style?", "Set your budget and choose how you'd like to travel."],
-  ['What are you into?', "Select what you'd love to experience on this journey."],
-  ['Ready for your journey?', 'Review your preferences before we build your trip.'],
+const sections = [
+  { title: 'Where are you going?', description: 'Choose where your journey starts and where you want to explore.', Component: DestinationStep },
+  { title: 'When are you traveling?', description: "Choose your travel dates and who's coming along.", Component: DatesTravelersStep },
+  { title: "What's your travel style?", description: "Set your budget and choose how you'd like to travel.", Component: TravelStyleStep },
+  { title: 'What are you into?', description: "Select what you'd love to experience on this journey.", Component: InterestsStep },
 ]
-const stepComponents = [DestinationStep, DatesTravelersStep, TravelStyleStep, InterestsStep]
+
+const sectionIndexes = sections.map((_, index) => index)
 
 export default function PlanJourneyPage() {
   const navigate = useNavigate()
@@ -43,10 +33,11 @@ export default function PlanJourneyPage() {
   const [params] = useSearchParams()
   const [values, setValues] = useState<JourneyPlan>(() => {
     if (restoredPlan) return restoredPlan
-    const selected = destinations.find((item) => item.id === params.get('destination'))
+    const requested = params.get('destination')?.trim().slice(0, 80) ?? ''
+    const selected = destinations.find((item) => item.id === requested)
     return {
       origin: previewUser.location,
-      destination: selected?.name || '',
+      destination: selected?.name || (selected ? '' : requested),
       startDate: '',
       endDate: '',
       travelers: selected?.persons || 2,
@@ -56,117 +47,128 @@ export default function PlanJourneyPage() {
       interests: [],
     }
   })
-  const [activeStep, setActiveStep] = useState(restoredPlan ? 4 : 0)
   const [attempted, setAttempted] = useState(false)
-  const headingRef = useRef<HTMLHeadingElement>(null)
-  const errors = attempted ? validateStep(values, activeStep) : {}
-  const CurrentStep = stepComponents[activeStep]
 
-  function changeStep(step: number) {
-    setActiveStep(step)
-    setAttempted(false)
-    requestAnimationFrame(() => headingRef.current?.focus())
-  }
+  const sectionErrors = sectionIndexes.map((step) => validateStep(values, step))
+  const completed = sectionErrors.map((errors) => !Object.keys(errors).length)
+  const errors: PlanErrors = attempted ? Object.assign({}, ...sectionErrors) : {}
 
   function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
-    const validation = validateStep(values, activeStep)
-    if (Object.keys(validation).length) {
+    const invalidStep = completed.indexOf(false)
+    if (invalidStep !== -1) {
       setAttempted(true)
-      const field = Object.keys(validation)[0]
-      event.currentTarget.querySelector<HTMLInputElement>(`[name="${field}"]`)?.focus()
+      const field = Object.keys(sectionErrors[invalidStep])[0]
+      const form = event.currentTarget
+      const target =
+        form.querySelector<HTMLElement>(`[name="${field}"]`) ??
+        form.querySelector<HTMLElement>(`#plan-section-${invalidStep}`)
+      target?.focus()
       return
     }
-    if (activeStep < 4) {
-      setValues((current) => ({
-        ...current,
-        origin: current.origin.trim(),
-        destination: current.destination.trim(),
-      }))
-      changeStep(activeStep + 1)
-    } else {
-      const invalidStep = [0, 1, 2, 3].find(
-        (step) => Object.keys(validateStep(values, step)).length,
-      )
-      if (invalidStep !== undefined) {
-        changeStep(invalidStep)
-        setAttempted(true)
-      } else {
-        navigate('/plan/generating', { state: { plan: values } })
-      }
-    }
+    navigate('/plan/generating', {
+      state: { plan: { ...values, origin: values.origin.trim(), destination: values.destination.trim() } },
+    })
   }
+
+  const completedCount = completed.filter(Boolean).length
 
   return (
     <PageShell>
       <title>Plan your journey | Journey</title>
       <AppHeader
-        maxWidth="md"
         actions={<Button component={RouterLink} to="/home" startIcon={<LucideIcon node={ArrowLeft} />}>Home</Button>}
       />
-      <Container component="main" maxWidth="md" sx={{ py: { xs: 3, md: 5 }, flex: 1 }}>
-        <Typography component="h1" variant="h3" sx={{ mb: 1 }}>Plan your journey</Typography>
-        <Typography color="text.secondary" sx={{ mb: 4 }}>Tell us what you're looking for.</Typography>
-        <Stepper activeStep={activeStep} alternativeLabel sx={{ display: { xs: 'none', md: 'flex' }, mb: 4 }}>
-          {stepLabels.map((label) => <Step key={label}><StepLabel>{label}</StepLabel></Step>)}
-        </Stepper>
-        <Box sx={{ display: { xs: 'block', md: 'none' }, mb: 3 }}>
-          <Typography variant="body2" sx={{ mb: 1 }}>Step {activeStep + 1} of 5 · {stepLabels[activeStep]}</Typography>
-          <LinearProgress variant="determinate" value={(activeStep + 1) * 20} aria-label="Planning progress" />
+      <Container component="main" maxWidth="lg" sx={{ py: { xs: 3, md: 5 }, flex: 1 }}>
+        <Box className={motion.fadeUp} sx={{ mb: { xs: 3, md: 4 } }}>
+          <Typography component="h1" variant="h3" sx={{ mb: 1 }}>Plan your journey</Typography>
+          <Typography variant="subtitle1">Tell us what you're looking for, all in one place.</Typography>
         </Box>
-        <Paper
+        <Box
           component="form"
-          variant="outlined"
           noValidate
           onSubmit={handleSubmit}
-          sx={{ p: { xs: 2.5, sm: 4 } }}
+          sx={{
+            display: 'grid',
+            gridTemplateColumns: { xs: 'minmax(0, 1fr)', md: 'minmax(0, 1fr) 340px' },
+            gap: 3,
+            alignItems: 'start',
+          }}
         >
-          <Box key={activeStep} className={motion.fadeUp}>
-            <Typography
-              ref={headingRef}
-              tabIndex={-1}
-              component="h2"
-              variant="h5"
-              sx={{ mb: 1, '&:focus': { outlineColor: 'primary.main' } }}
-            >
-              {introductions[activeStep][0]}
-            </Typography>
-            <Typography color="text.secondary" variant="body2" sx={{ mb: 3 }}>{introductions[activeStep][1]}</Typography>
-            {activeStep === 4 ? (
-              <ReviewStep values={values} onEdit={changeStep} />
-            ) : (
-              <CurrentStep
-                values={values}
-                errors={errors}
-                onChange={(patch) => setValues((current) => ({ ...current, ...patch }))}
-              />
-            )}
-          </Box>
-          <Stack
-            direction="row"
-            sx={{
-              justifyContent: 'space-between',
-              flexWrap: 'wrap',
-              gap: 2,
-              mt: 4,
-              pt: 3,
-              borderTop: 1,
-              borderColor: 'divider',
-            }}
+          <Stack spacing={3}>
+            {sections.map(({ title, description, Component }, index) => (
+              <Paper
+                key={title}
+                component="section"
+                variant="outlined"
+                aria-labelledby={`plan-section-${index}`}
+                className={motion.fadeUp}
+                sx={{ p: { xs: 2.5, sm: 3.5 }, animationDelay: `${index * 60}ms` }}
+              >
+                <Stack direction="row" spacing={1.5} sx={{ alignItems: 'center', mb: 0.5 }}>
+                  <Box
+                    aria-hidden="true"
+                    sx={(theme) => ({
+                      display: 'grid',
+                      placeItems: 'center',
+                      width: 28,
+                      height: 28,
+                      borderRadius: '50%',
+                      fontSize: 13,
+                      fontWeight: 700,
+                      flexShrink: 0,
+                      color: completed[index] ? 'common.white' : 'primary.dark',
+                      bgcolor: completed[index] ? 'success.main' : alpha(theme.palette.primary.main, 0.1),
+                    })}
+                  >
+                    {completed[index] ? <LucideIcon node={Check} /> : index + 1}
+                  </Box>
+                  <Typography id={`plan-section-${index}`} tabIndex={-1} component="h2" variant="h5">
+                    {title}
+                  </Typography>
+                </Stack>
+                <Typography color="text.secondary" variant="body2" sx={{ mb: 3, ml: { sm: 5 } }}>
+                  {description}
+                </Typography>
+                <Component
+                  values={values}
+                  errors={errors}
+                  onChange={(patch) => setValues((current) => ({ ...current, ...patch }))}
+                />
+              </Paper>
+            ))}
+          </Stack>
+          <Paper
+            component="aside"
+            aria-label="Trip summary"
+            variant="outlined"
+            sx={{ p: 3, position: { md: 'sticky' }, top: { md: 104 } }}
           >
-            {activeStep > 0 && (
-              <Button type="button" onClick={() => changeStep(activeStep - 1)} startIcon={<LucideIcon node={ArrowLeft} />}>Back</Button>
-            )}
+            <PlanSummary values={values} />
+            <Box sx={{ mt: 3 }}>
+              <Typography role="status" variant="body2" sx={{ mb: 1 }}>
+                {completedCount} of {sections.length} sections complete
+              </Typography>
+              <LinearProgress
+                variant="determinate"
+                value={(completedCount / sections.length) * 100}
+                aria-label="Planning progress"
+              />
+            </Box>
             <Button
               type="submit"
               variant="contained"
-              sx={{ ml: 'auto' }}
-              endIcon={<LucideIcon node={activeStep === 4 ? Sparkles : ArrowRight} />}
+              fullWidth
+              sx={{ mt: 3 }}
+              endIcon={<LucideIcon node={Sparkles} />}
             >
-              {activeStep === 4 ? 'Generate My Journey' : 'Continue'}
+              Generate My Journey
             </Button>
-          </Stack>
-        </Paper>
+            <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mt: 1.5, textAlign: 'center' }}>
+              You'll get a preview you can ask questions about.
+            </Typography>
+          </Paper>
+        </Box>
       </Container>
     </PageShell>
   )
