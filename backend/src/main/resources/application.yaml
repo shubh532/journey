@@ -23,3 +23,15 @@ spring:
       org.springframework.security: DEBUG
       org.springframework.web.reactive.function.client: DEBUG
       reactor.netty: DEBUG
+
+app:
+  jwt:
+    secret: ${JWT_SECRET}
+    expiration-minutes: ${JWT_EXPIRATION_MINUTES:60}
+  auth:
+    cookie:
+      name: journey_auth
+      secure: ${COOKIE_SECURE:true}
+      same-site: ${COOKIE_SAME_SITE:Lax}
+  cors:
+    allowed-origins: ${FRONTEND_ORIGIN:http://localhost:5173}
