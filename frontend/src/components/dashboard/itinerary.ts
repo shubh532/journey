@@ -46,50 +46,6 @@ const activityFor = (interest: string | undefined, destination: string) =>
     description: 'Time to explore at your own pace.',
   }
 
-export function buildDailyItinerary(overview: JourneyOverview): Activity[] {
-  const { plan, days, hotel, flight } = overview
-  const { destination, interests } = plan
-  const around = `Around ${destination}`
-  const items: Activity[] = []
-  const add = (
-    day: number,
-    minutes: number,
-    kind: ActivityKind,
-    title: string,
-    place: string,
-    description: string,
-    image?: string,
-  ) => items.push({ id: `base-${day}-${minutes}`, day, minutes, kind, title, place, description, image })
-  const interestAt = (offset: number) => activityFor(interests[offset % Math.max(interests.length, 1)], destination)
-
-  for (let day = 1; day <= days; day++) {
-    if (days === 1) {
-      add(day, at(9), 'food', 'Breakfast', around, 'Start the day with a local breakfast.')
-      add(day, at(11), 'activity', interestAt(0).title, around, interestAt(0).description)
-      add(day, at(13), 'food', 'Lunch', around, 'A relaxed lunch at a local favourite.')
-      add(day, at(16), 'activity', interestAt(1).title, around, interestAt(1).description)
-    } else if (day === 1) {
-      const [hours, minutes] = flight.arrival.split(':').map(Number)
-      add(day, at(hours, minutes), 'travel', `Arrive in ${destination}`, `${flight.destinationCode} Airport`, 'Arrive and transfer to your hotel.')
-      add(day, at(11), 'stay', `Check-in at ${hotel.name}`, hotel.area, 'Settle in and freshen up.', hotel.image)
-      add(day, at(13), 'food', 'Lunch', around, 'A relaxed first meal at a local favourite.')
-      add(day, at(16), 'activity', interestAt(0).title, around, interestAt(0).description)
-      add(day, at(20), 'food', 'Dinner', around, 'Dinner somewhere easy near your hotel.')
-    } else if (day === days) {
-      add(day, at(9), 'food', 'Breakfast & check-out', hotel.name, 'A slow final breakfast, then check out.')
-      add(day, at(11), 'activity', 'Last look around', around, 'A final stroll or some last-minute shopping.')
-      add(day, at(15), 'travel', `Depart ${destination}`, `${flight.destinationCode} Airport`, 'Head to the airport for your journey home.')
-    } else {
-      add(day, at(9), 'food', 'Breakfast', hotel.name, 'Start the day with breakfast at your hotel.')
-      add(day, at(11), 'activity', interestAt(day - 2).title, around, interestAt(day - 2).description)
-      add(day, at(13), 'food', 'Lunch', around, 'Lunch at a well-reviewed local spot.')
-      add(day, at(16), 'activity', interestAt(day - 1).title, around, interestAt(day - 1).description)
-      add(day, at(20), 'food', 'Dinner', around, 'Dinner to round off the day.')
-    }
-  }
-  return items
-}
-
 export function mergeItinerary(base: Activity[], added: Activity[]) {
   return [...base, ...added].sort((a, b) => a.day - b.day || a.minutes - b.minutes)
 }

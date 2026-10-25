@@ -6,6 +6,7 @@ import { destinations, type Destination } from '../components/home/data'
 import { categories, indiaStates, worldPlaces } from '../components/home/exploreData'
 import CategoryRow from '../components/home/CategoryRow'
 import HomeHero from '../components/home/HomeHero'
+import MyJourneys from '../components/home/MyJourneys'
 import PlaceTiles from '../components/home/PlaceTiles'
 import PopularDestinations from '../components/home/PopularDestinations'
 import SectionHeading from '../components/home/SectionHeading'
@@ -53,6 +54,7 @@ export default function HomePage() {
       <main>
         <HomeHero featured={destinations[0]} onPlan={planTrip} />
         <Container maxWidth={false} sx={{ px: { xs: 2, md: 3 }, py: { xs: 3, md: 4 } }}>
+          <MyJourneys sx={sectionSx} />
           <Box component="section" aria-labelledby="categories-title" sx={sectionSx} className={motion.fadeUp}>
             <SectionHeading
               id="categories-title"

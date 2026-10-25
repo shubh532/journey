@@ -1,6 +1,21 @@
-import { useMemo, useState, type ReactNode } from 'react'
-import { Link as RouterLink, useLocation, useNavigate } from 'react-router'
-import { Box, Button, Container, Divider, Fab, Paper, Snackbar, useMediaQuery } from '@mui/material'
+import { useEffect, useMemo, useState, type ReactNode } from 'react'
+import { Link as RouterLink, useNavigate, useParams } from 'react-router'
+import {
+  Box,
+  Button,
+  CircularProgress,
+  Container,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogContentText,
+  DialogTitle,
+  Divider,
+  Fab,
+  Paper,
+  Snackbar,
+  useMediaQuery,
+} from '@mui/material'
 import { ArrowLeft, Hammer, MessageCircle, Minus, Route } from 'lucide'
 import LucideIcon from '../components/LucideIcon'
 import ChatPanel from '../components/chat/ChatPanel'
@@ -11,22 +26,18 @@ import DashboardHero from '../components/dashboard/DashboardHero'
 import DestinationMap from '../components/dashboard/DestinationMap'
 import ItineraryTimeline from '../components/dashboard/ItineraryTimeline'
 import TopHighlights from '../components/dashboard/TopHighlights'
-import {
-  buildDailyItinerary,
-  mergeItinerary,
-  type Activity,
-  type Suggestion,
-} from '../components/dashboard/itinerary'
+import { mergeItinerary, type Activity, type Suggestion } from '../components/dashboard/itinerary'
 import AppHeader from '../components/layout/AppHeader'
 import EmptyState from '../components/layout/EmptyState'
 import MainHeader from '../components/layout/MainHeader'
 import PageShell from '../components/layout/PageShell'
 import SideNav from '../components/layout/SideNav'
 import TabNav from '../components/layout/TabNav'
-import { readPlanState } from '../components/plan/model'
-import { buildJourneyOverview, type JourneyOverview } from '../components/journey/overview'
+import { fromJourneyDto, toActivity, type JourneyOverview } from '../components/journey/overview'
 import { BudgetSnapshot, FlightPreviewCard, StayPreviewCard } from '../components/journey/OverviewSections'
 import { workspaceTabs, type WorkspaceTabId } from '../components/journey/workspace'
+import { toApiError, type ApiError } from '../services/apiError'
+import { journeyApi, type JourneyDto } from '../services/journeyApi'
 import motion from '../theme/motion.module.css'
 
 const DOCK_CHAT_QUERY = '(min-width: 1440px)'
@@ -43,7 +54,15 @@ function Panel({ children }: { children: ReactNode }) {
   return <Paper variant="outlined" sx={{ p: { xs: 2, md: 2.5 } }}>{children}</Paper>
 }
 
-function MissingPlan() {
+function JourneyUnavailable({
+  title,
+  description,
+  action,
+}: {
+  title: string
+  description: string
+  action: ReactNode
+}) {
   return (
     <PageShell>
       <title>Journey | Journey</title>
@@ -53,9 +72,9 @@ function MissingPlan() {
           <EmptyState
             headingComponent="h1"
             icon={Route}
-            title="Let's plan your journey first"
-            description="There's no generated journey to show yet. Complete the planner to preview one."
-            action={<Button component={RouterLink} to="/plan" variant="contained">Go to planning</Button>}
+            title={title}
+            description={description}
+            action={action}
           />
         </Paper>
       </Container>
@@ -63,7 +82,15 @@ function MissingPlan() {
   )
 }
 
-function Dashboard({ overview }: { overview: JourneyOverview }) {
+function Dashboard({
+  journeyId,
+  overview,
+  baseItinerary,
+}: {
+  journeyId: string
+  overview: JourneyOverview
+  baseItinerary: Activity[]
+}) {
   const navigate = useNavigate()
   const dockChat = useMediaQuery(DOCK_CHAT_QUERY)
   const showSidebar = useMediaQuery(SIDEBAR_QUERY)
@@ -74,23 +101,50 @@ function Dashboard({ overview }: { overview: JourneyOverview }) {
   const [chatOpen, setChatOpen] = useState(false)
   const [chatMinimized, setChatMinimized] = useState(false)
   const [headerQuery, setHeaderQuery] = useState('')
+  const [confirmingDelete, setConfirmingDelete] = useState(false)
+  const [deleting, setDeleting] = useState(false)
   const chat = useJourneyChat(overview)
 
-  const baseItinerary = useMemo(() => buildDailyItinerary(overview), [overview])
   const itinerary = useMemo(() => mergeItinerary(baseItinerary, added), [baseItinerary, added])
   const activeLabel = workspaceTabs.find((tab) => tab.id === activeTab)?.label
   const chatDocked = dockChat && !chatMinimized
 
-  const isAdded = (suggestionId: string, day: number) =>
-    added.some((activity) => activity.id === `${suggestionId}-day-${day}`)
+  // Matched on content so items saved in an earlier visit still count as added.
+  const isAdded = (suggestion: Suggestion, day: number) =>
+    itinerary.some((item) => item.day === day && item.title === suggestion.title && item.kind === suggestion.kind)
 
-  function addActivity(suggestion: Suggestion, day: number) {
-    if (isAdded(suggestion.id, day)) return
-    setAdded((current) => [...current, { ...suggestion, id: `${suggestion.id}-day-${day}`, day }])
-    setNotice(`Added "${suggestion.title}" to Day ${day}.`)
+  async function addActivity(suggestion: Suggestion, day: number) {
+    if (isAdded(suggestion, day)) return
+    try {
+      const saved = await journeyApi.addItem(journeyId, {
+        day,
+        startMinutes: suggestion.minutes,
+        kind: suggestion.kind,
+        title: suggestion.title,
+        place: suggestion.place,
+        description: suggestion.description,
+      })
+      setAdded((current) => [...current, toActivity(saved)])
+      setNotice(`Added "${suggestion.title}" to Day ${day}.`)
+    } catch (error) {
+      setNotice(toApiError(error).message)
+    }
   }
 
-  const editPlan = () => navigate('/plan', { state: { plan: overview.plan } })
+  const editPlan = () => navigate('/plan', { state: { plan: overview.plan, journeyId } })
+
+  async function deleteJourney() {
+    setDeleting(true)
+    try {
+      await journeyApi.remove(journeyId)
+      navigate('/home', { replace: true })
+    } catch (error) {
+      setConfirmingDelete(false)
+      setNotice(toApiError(error).message)
+    } finally {
+      setDeleting(false)
+    }
+  }
 
   const chatProps = {
     messages: chat.messages,
@@ -183,6 +237,7 @@ function Dashboard({ overview }: { overview: JourneyOverview }) {
                 overview={overview}
                 onShare={() => setNotice('Sharing is coming soon.')}
                 onEditPlan={editPlan}
+                onDelete={() => setConfirmingDelete(true)}
                 onChat={chatDocked ? undefined : openChat}
               />
             </Box>
@@ -262,6 +317,24 @@ function Dashboard({ overview }: { overview: JourneyOverview }) {
           Ask Journey
         </Fab>
       )}
+      <Dialog
+        open={confirmingDelete}
+        onClose={() => !deleting && setConfirmingDelete(false)}
+        aria-labelledby="delete-journey-title"
+      >
+        <DialogTitle id="delete-journey-title">Delete this journey?</DialogTitle>
+        <DialogContent>
+          <DialogContentText>
+            "{overview.title}" and its itinerary will be permanently deleted. This cannot be undone.
+          </DialogContentText>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setConfirmingDelete(false)} disabled={deleting}>Cancel</Button>
+          <Button color="error" variant="contained" onClick={deleteJourney} disabled={deleting}>
+            {deleting ? 'Deleting...' : 'Delete'}
+          </Button>
+        </DialogActions>
+      </Dialog>
       <Snackbar
         open={Boolean(notice)}
         autoHideDuration={3000}
@@ -273,10 +346,67 @@ function Dashboard({ overview }: { overview: JourneyOverview }) {
   )
 }
 
-export default function JourneyOverviewPage() {
-  const location = useLocation()
-  const plan = readPlanState(location.state)
-  const overview = useMemo(() => (plan ? buildJourneyOverview(plan) : null), [plan])
+type LoadResult = { key: string; journey?: JourneyDto; error?: ApiError }
 
-  return overview ? <Dashboard key={location.key} overview={overview} /> : <MissingPlan />
+export default function JourneyOverviewPage() {
+  const { id } = useParams()
+  const [attempt, setAttempt] = useState(0)
+  const [loaded, setLoaded] = useState<LoadResult | null>(null)
+  const key = `${id}:${attempt}`
+
+  useEffect(() => {
+    if (!id) return
+    let active = true
+    journeyApi
+      .get(id)
+      .then((journey) => active && setLoaded({ key, journey }))
+      .catch((error: unknown) => active && setLoaded({ key, error: toApiError(error) }))
+    return () => {
+      active = false
+    }
+  }, [id, key])
+
+  const result = loaded?.key === key ? loaded : null
+  const journey = result?.journey
+  const view = useMemo(() => (journey ? fromJourneyDto(journey) : null), [journey])
+
+  if (!id || result?.error?.status === 404) {
+    return (
+      <JourneyUnavailable
+        title="Journey not found"
+        description="This journey doesn't exist or isn't yours to view."
+        action={<Button component={RouterLink} to="/home" variant="contained">Back to home</Button>}
+      />
+    )
+  }
+  if (result?.error) {
+    return (
+      <JourneyUnavailable
+        title="We couldn't load your journey"
+        description={result.error.message}
+        action={<Button variant="contained" onClick={() => setAttempt((current) => current + 1)}>Try again</Button>}
+      />
+    )
+  }
+  if (!result) {
+    return (
+      <PageShell>
+        <title>Journey | Journey</title>
+        <AppHeader maxWidth="md" />
+        <Container component="main" maxWidth="sm" sx={{ py: 8, flex: 1, display: 'grid', placeItems: 'center' }}>
+          <CircularProgress aria-label="Loading your journey" />
+        </Container>
+      </PageShell>
+    )
+  }
+  if (!view) {
+    return (
+      <JourneyUnavailable
+        title="This journey isn't ready yet"
+        description="Its plan hasn't been generated. Open the planner to generate it."
+        action={<Button component={RouterLink} to="/plan" variant="contained">Go to planning</Button>}
+      />
+    )
+  }
+  return <Dashboard key={id} journeyId={id} overview={view.overview} baseItinerary={view.itinerary} />
 }

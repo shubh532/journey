@@ -1,5 +1,7 @@
 import { destinations } from '../home/data'
+import type { Activity } from '../dashboard/itinerary'
 import type { JourneyPlan } from '../plan/model'
+import type { ItineraryItemDto, JourneyDto } from '../../services/journeyApi'
 
 export type JourneyDay = { day: number; title: string }
 
@@ -66,110 +68,74 @@ const interestThemes: Record<string, string> = {
   Relaxation: 'A slow, relaxed day',
 }
 
-// Mock-only: arbitrary city names have no real airport lookup yet.
-const airportCodes: Record<string, string> = {
-  ahmedabad: 'AMD',
-  goa: 'GOI',
-  manali: 'KUU',
-  kerala: 'COK',
-  bali: 'DPS',
-  dubai: 'DXB',
-  paris: 'CDG',
-}
-const airportCode = (city: string) =>
-  airportCodes[city.trim().toLowerCase()] ?? city.trim().slice(0, 3).toUpperCase()
-
-const styleProfiles = {
-  Budget: {
-    spend: 0.78,
-    hotel: { name: 'Sunrise Stay', stars: 3, rating: 4.2, amenities: ['Breakfast', 'Wi-Fi', 'Air conditioning'] },
-  },
-  Balanced: {
-    spend: 0.85,
-    hotel: { name: 'Azure Bay Resort', stars: 4, rating: 4.5, amenities: ['Breakfast', 'Pool', 'Wi-Fi'] },
-  },
-  Luxury: {
-    spend: 0.92,
-    hotel: { name: 'The Grand Horizon', stars: 5, rating: 4.8, amenities: ['Breakfast', 'Pool', 'Spa'] },
-  },
-} as const
-
+// The API has no hotel photos yet.
 const fallbackHotelImage =
   'https://images.unsplash.com/photo-1566073771259-6a8506099945?auto=format&fit=crop&w=800&q=80'
 
-const roundTo = (value: number, unit: number) => Math.max(unit, Math.round(value / unit) * unit)
-
-function buildItinerary(plan: JourneyPlan, days: number): JourneyDay[] {
+function buildItineraryPreview(plan: JourneyPlan, days: number): JourneyDay[] {
   return Array.from({ length: Math.min(days, previewDayLimit) }, (_, index) => {
     const day = index + 1
     if (days === 1) return { day, title: `${plan.destination} highlights` }
-    if (day === 1) return { day, title: `Arrival & settling in` }
+    if (day === 1) return { day, title: 'Arrival & settling in' }
     if (day === days) return { day, title: 'Final morning & departure' }
     const theme = interestThemes[plan.interests[(day - 2) % plan.interests.length]]
     return { day, title: theme ?? `Exploring ${plan.destination}` }
   })
 }
 
-export function buildJourneyOverview(plan: JourneyPlan): JourneyOverview {
-  const budget = Number(plan.budget)
+export type JourneyView = { overview: JourneyOverview; itinerary: Activity[] }
+
+/** Maps an API journey to the dashboard's view models; null when it has no generated content yet. */
+export function fromJourneyDto(dto: JourneyDto): JourneyView | null {
+  const { flight, stay, budgetBreakdown, itinerary, summary, estimatedCost } = dto
+  if (!flight || !stay || !budgetBreakdown || !itinerary || summary === undefined || estimatedCost === undefined) {
+    return null
+  }
+
+  const plan: JourneyPlan = {
+    origin: dto.origin,
+    destination: dto.destination,
+    startDate: dto.startDate,
+    endDate: dto.endDate,
+    travelers: dto.travelers,
+    tripType: dto.tripType,
+    budget: String(dto.budget),
+    travelStyle: dto.travelStyle,
+    interests: dto.interests,
+  }
   const days = Math.max(
     1,
-    Math.round((Date.parse(`${plan.endDate}T00:00:00`) - Date.parse(`${plan.startDate}T00:00:00`)) / dayMs) + 1,
+    Math.round((Date.parse(`${dto.endDate}T00:00:00`) - Date.parse(`${dto.startDate}T00:00:00`)) / dayMs) + 1,
   )
-  const nights = Math.max(days - 1, 1)
-  const profile = styleProfiles[plan.travelStyle]
-  const target = budget * profile.spend
-
-  const pricePerPerson = roundTo((target * 0.3) / plan.travelers, 10)
-  const pricePerNight = roundTo((target * 0.53) / nights, 100)
-  const flights = pricePerPerson * plan.travelers
-  const stay = pricePerNight * nights
-  const food = roundTo(target * 0.094, 100)
-  const activities = roundTo(target * 0.059, 100)
-  const localTravel = roundTo(target * 0.017, 10)
-
-  const destination = destinations.find((item) => item.name.toLowerCase() === plan.destination.trim().toLowerCase())
-  const interestList = new Intl.ListFormat('en', { style: 'long', type: 'conjunction' }).format(
-    plan.interests.map((interest) => interest.toLowerCase()),
-  )
+  const destination = destinations.find((item) => item.name.toLowerCase() === dto.destination.trim().toLowerCase())
 
   return {
-    plan,
-    title: `${plan.destination} Journey`,
-    days,
-    budget,
-    estimatedCost: flights + stay + food + activities + localTravel,
-    coverImage: destination && { src: destination.image, alt: destination.imageAlt },
-    itineraryPreview: buildItinerary(plan, days),
-    hiddenDays: Math.max(days - previewDayLimit, 0),
-    flight: {
-      airline: 'IndiGo',
-      originCity: plan.origin,
-      originCode: airportCode(plan.origin),
-      destinationCity: plan.destination,
-      destinationCode: airportCode(plan.destination),
-      departure: '06:20',
-      arrival: '08:05',
-      duration: '1h 45m',
-      stops: 'Non-stop',
-      pricePerPerson,
+    overview: {
+      plan,
+      title: dto.title,
+      days,
+      budget: dto.budget,
+      estimatedCost,
+      coverImage: destination && { src: destination.image, alt: destination.imageAlt },
+      itineraryPreview: buildItineraryPreview(plan, days),
+      hiddenDays: Math.max(days - previewDayLimit, 0),
+      flight,
+      hotel: { ...stay, image: fallbackHotelImage, imageAlt: `${stay.name} exterior` },
+      budgetBreakdown,
+      summary,
     },
-    hotel: {
-      ...profile.hotel,
-      amenities: [...profile.hotel.amenities],
-      area: `${plan.destination} · Near the main attractions`,
-      pricePerNight,
-      nights,
-      image: fallbackHotelImage,
-      imageAlt: `${profile.hotel.name} exterior and pool`,
-    },
-    budgetBreakdown: [
-      { label: 'Flights', amount: flights },
-      { label: 'Stay', amount: stay },
-      { label: 'Food', amount: food },
-      { label: 'Activities', amount: activities },
-      { label: 'Local travel', amount: localTravel },
-    ],
-    summary: `This journey balances ${interestList} while keeping the plan within your budget.`,
+    itinerary: itinerary.map(toActivity),
+  }
+}
+
+export function toActivity(item: ItineraryItemDto): Activity {
+  return {
+    id: item.id,
+    day: item.day,
+    minutes: item.startMinutes,
+    title: item.title,
+    place: item.place ?? '',
+    description: item.description ?? '',
+    kind: item.kind,
   }
 }

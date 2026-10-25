@@ -17,7 +17,7 @@ export default function App() {
         <Route path="/home" element={<HomePage />} />
         <Route path="/plan" element={<PlanJourneyPage />} />
         <Route path="/plan/generating" element={<GenerationPage />} />
-        <Route path="/journey/preview" element={<JourneyOverviewPage />} />
+        <Route path="/journey/:id" element={<JourneyOverviewPage />} />
         <Route path="*" element={<NotFoundPage />} />
       </Routes>
     </BrowserRouter>

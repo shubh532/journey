@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { Box, Button, Chip, IconButton, LinearProgress, ListItemIcon, Menu, MenuItem, Stack, Tooltip, Typography } from '@mui/material'
 import { alpha } from '@mui/material/styles'
-import { CalendarDays, EllipsisVertical, MapPin, Pencil, Share2, Users, Wallet } from 'lucide'
+import { CalendarDays, EllipsisVertical, MapPin, Pencil, Share2, Trash2, Users, Wallet } from 'lucide'
 import { destinations } from '../home/data'
 import ImageWithFallback from '../layout/ImageWithFallback'
 import LucideIcon from '../LucideIcon'
@@ -14,10 +14,11 @@ type DashboardHeroProps = {
   overview: JourneyOverview
   onShare: () => void
   onEditPlan: () => void
+  onDelete: () => void
   onChat?: () => void
 }
 
-export default function DashboardHero({ overview, onShare, onEditPlan, onChat }: DashboardHeroProps) {
+export default function DashboardHero({ overview, onShare, onEditPlan, onDelete, onChat }: DashboardHeroProps) {
   const { plan, budget, estimatedCost } = overview
   const [menuAnchor, setMenuAnchor] = useState<HTMLElement | null>(null)
   const remaining = budget - estimatedCost
@@ -72,6 +73,10 @@ export default function DashboardHero({ overview, onShare, onEditPlan, onChat }:
               <MenuItem onClick={() => { setMenuAnchor(null); onEditPlan() }}>
                 <ListItemIcon><LucideIcon node={Pencil} /></ListItemIcon>
                 Edit plan
+              </MenuItem>
+              <MenuItem onClick={() => { setMenuAnchor(null); onDelete() }} sx={{ color: 'error.main' }}>
+                <ListItemIcon sx={{ color: 'inherit' }}><LucideIcon node={Trash2} /></ListItemIcon>
+                Delete journey
               </MenuItem>
             </Menu>
           </Stack>

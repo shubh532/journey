@@ -44,6 +44,12 @@ export function readPlanState(state: unknown): JourneyPlan | null {
     : null
 }
 
+/** The id of the journey being edited, when the planner was opened from an existing journey. */
+export function readJourneyId(state: unknown): string | undefined {
+  if (!state || typeof state !== 'object' || !('journeyId' in state)) return undefined
+  return typeof state.journeyId === 'string' ? state.journeyId : undefined
+}
+
 export function validateStep(values: JourneyPlan, step: number): PlanErrors {
   const errors: PlanErrors = {}
   if (step === 0) {

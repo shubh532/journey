@@ -25,7 +25,7 @@ type ChatPanelProps = {
   pending: boolean
   onSend: (text: string) => void
   selectedDay: number
-  isAdded: (suggestionId: string, day: number) => boolean
+  isAdded: (suggestion: Suggestion, day: number) => boolean
   onAdd: (suggestion: Suggestion, day: number) => void
   onEditPlan: () => void
   onClose?: () => void
@@ -136,7 +136,7 @@ export default function ChatPanel({
               {message.suggestions && (
                 <Stack spacing={1} sx={{ mt: 1.25, whiteSpace: 'normal' }}>
                   {message.suggestions.map((suggestion, index) => {
-                    const added = isAdded(suggestion.id, selectedDay)
+                    const added = isAdded(suggestion, selectedDay)
                     return (
                       <Box
                         key={suggestion.id}

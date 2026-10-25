@@ -1,4 +1,5 @@
 import {
+  Alert,
   Box,
   Button,
   Container,
@@ -15,21 +16,29 @@ import LucideIcon from '../components/LucideIcon'
 import EmptyState from '../components/layout/EmptyState'
 import PageShell from '../components/layout/PageShell'
 import Wordmark from '../components/layout/Wordmark'
-import { readPlanState, type JourneyPlan } from '../components/plan/model'
+import { readJourneyId, readPlanState, type JourneyPlan } from '../components/plan/model'
 import { generationStages, useGenerationPreview } from '../components/generation/useGenerationPreview'
+import { useJourneySave } from '../components/generation/useJourneySave'
 
-function GenerationExperience({ plan }: { plan: JourneyPlan }) {
+function GenerationExperience({ plan, journeyId }: { plan: JourneyPlan; journeyId?: string }) {
   const navigate = useNavigate()
-  const { completedStages, progress, complete } = useGenerationPreview()
+  const animation = useGenerationPreview()
+  const save = useJourneySave(plan, journeyId)
+  const savedId = save.status === 'saved' ? save.id : null
+  // The animation is only cosmetic; the journey is ready once it has also been saved.
+  const complete = animation.complete && savedId !== null
+  const completedStages = animation.completedStages
+  const progress = complete ? 100 : Math.min(animation.progress, 95)
+  const activeStage = generationStages[Math.min(completedStages, generationStages.length - 1)]
 
   useEffect(() => {
-    if (!complete) return
+    if (!complete || savedId === null) return
     const timer = window.setTimeout(
-      () => navigate('/journey/preview', { state: { plan }, replace: true }),
+      () => navigate(`/journey/${savedId}`, { replace: true }),
       1200,
     )
     return () => window.clearTimeout(timer)
-  }, [complete, navigate, plan])
+  }, [complete, navigate, savedId])
   const dateFormatter = new Intl.DateTimeFormat('en-IN', { dateStyle: 'medium' })
   const budget = new Intl.NumberFormat('en-IN', {
     style: 'currency',
@@ -54,7 +63,7 @@ function GenerationExperience({ plan }: { plan: JourneyPlan }) {
           <LucideIcon node={complete ? CircleCheck : Sparkles} />
         </Box>
         <Typography component="h1" variant="h4">
-          {complete ? 'Your journey is ready' : 'Building your journey'}
+          {save.status === 'failed' ? "We couldn't build your journey" : complete ? 'Your journey is ready' : 'Building your journey'}
         </Typography>
         <Typography color="text.secondary" variant="body2" sx={{ overflowWrap: 'anywhere' }}>
           {complete
@@ -62,9 +71,14 @@ function GenerationExperience({ plan }: { plan: JourneyPlan }) {
             : `We're creating a personalized trip to ${plan.destination} based on your preferences.`}
         </Typography>
         <Typography variant="caption" color="text.secondary">
-          Simulated preview · No AI research or bookings are taking place.
+          Estimated plan · No AI research or bookings are taking place.
         </Typography>
       </Stack>
+      {save.status === 'failed' && (
+        <Alert severity="error" sx={{ mt: 2 }}>
+          {save.error.message}
+        </Alert>
+      )}
       <Box sx={{ my: 3, p: 2, bgcolor: 'background.default', borderRadius: 1 }}>
         <Typography sx={{ fontWeight: 600, overflowWrap: 'anywhere' }}>
           {plan.origin} → {plan.destination}
@@ -80,8 +94,9 @@ function GenerationExperience({ plan }: { plan: JourneyPlan }) {
       </Box>
       <Stack component="ol" spacing={1} sx={{ listStyle: 'none', p: 0, m: 0 }}>
         {generationStages.map((stage, index) => {
+          const failed = save.status === 'failed'
           const done = index < completedStages
-          const active = index === completedStages && !complete
+          const active = index === completedStages && !complete && !failed
           const status = done ? 'Complete' : active ? 'In progress' : 'Pending'
 
           return (
@@ -120,7 +135,7 @@ function GenerationExperience({ plan }: { plan: JourneyPlan }) {
         })}
       </Stack>
       <Typography role="status" variant="body2" sx={{ mt: 3, mb: 1, textAlign: 'center' }}>
-        {complete ? 'Journey ready — 100%' : `${progress}% complete · ${generationStages[completedStages].label}`}
+        {complete ? 'Journey ready — 100%' : `${progress}% complete · ${activeStage.label}`}
       </Typography>
       <LinearProgress
         variant="determinate"
@@ -133,13 +148,13 @@ function GenerationExperience({ plan }: { plan: JourneyPlan }) {
         }}
       />
       <Typography variant="caption" color="text.secondary" sx={{ display: 'block', textAlign: 'center', mt: 2 }}>
-        {complete ? 'This is a simulated journey. Nothing has been booked or saved.' : 'This preview takes just a few moments.'}
+        {complete ? 'Your journey is saved to your account. Nothing has been booked.' : 'This takes just a few moments.'}
       </Typography>
       <Box sx={{ textAlign: 'center', mt: 2 }}>
         <Button
           component={RouterLink}
           to="/plan"
-          state={{ plan }}
+          state={{ plan, journeyId }}
           replace
           startIcon={<LucideIcon node={ArrowLeft} />}
         >
@@ -153,6 +168,7 @@ function GenerationExperience({ plan }: { plan: JourneyPlan }) {
 export default function GenerationPage() {
   const location = useLocation()
   const plan = readPlanState(location.state)
+  const journeyId = readJourneyId(location.state)
 
   return (
     <PageShell>
@@ -162,7 +178,7 @@ export default function GenerationPage() {
           <Wordmark to="/home" />
         </Box>
         {plan ? (
-          <GenerationExperience key={location.key} plan={plan} />
+          <GenerationExperience key={location.key} plan={plan} journeyId={journeyId} />
         ) : (
           <Paper variant="outlined" sx={{ p: { xs: 2, sm: 3 } }}>
             <EmptyState

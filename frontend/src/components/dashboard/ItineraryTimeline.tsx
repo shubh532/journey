@@ -146,7 +146,7 @@ export default function ItineraryTimeline({
         <Timeline items={items.filter((item) => item.day === selectedDay)} />
       )}
       <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mt: 2 }}>
-        Sample plan: times and places are suggestions, not confirmed bookings. Changes you add here last for this session.
+        Estimated plan: times and places are suggestions, not confirmed bookings. Activities you add are saved to your journey.
       </Typography>
     </Box>
   )

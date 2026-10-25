@@ -7,7 +7,7 @@ import LucideIcon from '../components/LucideIcon'
 import AppHeader from '../components/layout/AppHeader'
 import PageShell from '../components/layout/PageShell'
 import { destinations, previewUser } from '../components/home/data'
-import { readPlanState, validateStep, type JourneyPlan, type PlanErrors } from '../components/plan/model'
+import { readJourneyId, readPlanState, validateStep, type JourneyPlan, type PlanErrors } from '../components/plan/model'
 import {
   DestinationStep,
   DatesTravelersStep,
@@ -30,6 +30,7 @@ export default function PlanJourneyPage() {
   const navigate = useNavigate()
   const location = useLocation()
   const restoredPlan = readPlanState(location.state)
+  const journeyId = readJourneyId(location.state)
   const [params] = useSearchParams()
   const [values, setValues] = useState<JourneyPlan>(() => {
     if (restoredPlan) return restoredPlan
@@ -67,7 +68,10 @@ export default function PlanJourneyPage() {
       return
     }
     navigate('/plan/generating', {
-      state: { plan: { ...values, origin: values.origin.trim(), destination: values.destination.trim() } },
+      state: {
+        plan: { ...values, origin: values.origin.trim(), destination: values.destination.trim() },
+        journeyId,
+      },
     })
   }
 
