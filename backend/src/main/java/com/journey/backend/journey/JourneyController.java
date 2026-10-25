@@ -1,6 +1,8 @@
 package com.journey.backend.journey;
 
+import com.journey.backend.journey.dto.CreateItineraryItemRequest;
 import com.journey.backend.journey.dto.CreateJourneyRequest;
+import com.journey.backend.journey.dto.ItineraryItemResponse;
 import com.journey.backend.journey.dto.JourneyResponse;
 import com.journey.backend.journey.dto.UpdateJourneyRequest;
 import jakarta.validation.Valid;
@@ -55,6 +57,19 @@ public class JourneyController {
 	@ResponseStatus(HttpStatus.NO_CONTENT)
 	public void delete(@AuthenticationPrincipal Jwt jwt, @PathVariable UUID id) {
 		journeyService.delete(userId(jwt), id);
+	}
+
+	@PostMapping("/{id}/items")
+	@ResponseStatus(HttpStatus.CREATED)
+	public ItineraryItemResponse addItem(@AuthenticationPrincipal Jwt jwt, @PathVariable UUID id,
+			@Valid @RequestBody CreateItineraryItemRequest request) {
+		return journeyService.addItem(userId(jwt), id, request);
+	}
+
+	@DeleteMapping("/{id}/items/{itemId}")
+	@ResponseStatus(HttpStatus.NO_CONTENT)
+	public void removeItem(@AuthenticationPrincipal Jwt jwt, @PathVariable UUID id, @PathVariable UUID itemId) {
+		journeyService.removeItem(userId(jwt), id, itemId);
 	}
 
 	private static UUID userId(Jwt jwt) {

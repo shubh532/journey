@@ -18,6 +18,7 @@ import com.journey.backend.auth.security.JwtConfig;
 import com.journey.backend.auth.security.SecurityConfig;
 import com.journey.backend.exception.ApiException;
 import com.journey.backend.exception.GlobalExceptionHandler;
+import com.journey.backend.journey.dto.ItineraryItemResponse;
 import com.journey.backend.journey.dto.JourneyResponse;
 import java.math.BigDecimal;
 import java.time.Instant;
@@ -169,6 +170,41 @@ class JourneyControllerTest {
 						.contentType(MediaType.APPLICATION_JSON).content("{\"travelers\":11}"))
 				.andExpect(status().isBadRequest())
 				.andExpect(jsonPath("$.fieldErrors.travelers").exists());
+	}
+
+	@Test
+	void addItemReturns201WithLowercaseKind() throws Exception {
+		UUID itemId = UUID.randomUUID();
+		when(journeyService.addItem(eq(USER), eq(ID), any())).thenReturn(new ItineraryItemResponse(
+				itemId, 2, 600, ItemKind.ACTIVITY, "Scenic nature walk", null, null));
+
+		mvc.perform(post("/api/journeys/" + ID + "/items").with(user()).header("X-Requested-With", XHR)
+						.contentType(MediaType.APPLICATION_JSON)
+						.content("{\"day\":2,\"startMinutes\":600,\"kind\":\"activity\",\"title\":\"Scenic nature walk\"}"))
+				.andExpect(status().isCreated())
+				.andExpect(jsonPath("$.id").value(itemId.toString()))
+				.andExpect(jsonPath("$.kind").value("activity"));
+	}
+
+	@Test
+	void addItemRejectsInvalidInput() throws Exception {
+		mvc.perform(post("/api/journeys/" + ID + "/items").with(user()).header("X-Requested-With", XHR)
+						.contentType(MediaType.APPLICATION_JSON)
+						.content("{\"day\":0,\"startMinutes\":2000,\"kind\":\"activity\",\"title\":\"\"}"))
+				.andExpect(status().isBadRequest())
+				.andExpect(jsonPath("$.code").value("VALIDATION_FAILED"))
+				.andExpect(jsonPath("$.fieldErrors.day").exists())
+				.andExpect(jsonPath("$.fieldErrors.startMinutes").exists())
+				.andExpect(jsonPath("$.fieldErrors.title").exists());
+	}
+
+	@Test
+	void removeItemReturns204() throws Exception {
+		UUID itemId = UUID.randomUUID();
+
+		mvc.perform(delete("/api/journeys/" + ID + "/items/" + itemId).with(user()).header("X-Requested-With", XHR))
+				.andExpect(status().isNoContent());
+		verify(journeyService).removeItem(USER, ID, itemId);
 	}
 
 	@Test

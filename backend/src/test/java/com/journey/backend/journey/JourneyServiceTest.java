@@ -10,7 +10,9 @@ import static org.mockito.Mockito.when;
 
 import com.journey.backend.budget.BudgetEngine;
 import com.journey.backend.exception.ApiException;
+import com.journey.backend.journey.dto.CreateItineraryItemRequest;
 import com.journey.backend.journey.dto.CreateJourneyRequest;
+import com.journey.backend.journey.dto.ItineraryItemResponse;
 import com.journey.backend.journey.dto.JourneyResponse;
 import com.journey.backend.journey.dto.UpdateJourneyRequest;
 import java.math.BigDecimal;
@@ -163,6 +165,71 @@ class JourneyServiceTest {
 		assertThatThrownBy(() -> service.delete(OTHER_USER, JOURNEY_ID)).isInstanceOf(ApiException.class);
 		verify(itemRepository, never()).deleteByJourneyId(any());
 		verify(journeyRepository, never()).delete(any());
+	}
+
+	@Test
+	void addItemSavesAUserItemOnTheRequestedDay() {
+		when(journeyRepository.findByIdAndUserId(JOURNEY_ID, USER)).thenReturn(Optional.of(existing));
+		when(itemRepository.save(any(ItineraryItem.class))).thenAnswer(inv -> inv.getArgument(0));
+
+		ItineraryItemResponse response = service.addItem(USER, JOURNEY_ID,
+				new CreateItineraryItemRequest(3, 10 * 60, ItemKind.ACTIVITY, " Scenic nature walk ", " ", null));
+
+		assertThat(response.day()).isEqualTo(3);
+		assertThat(response.startMinutes()).isEqualTo(600);
+		assertThat(response.kind()).isEqualTo(ItemKind.ACTIVITY);
+		assertThat(response.title()).isEqualTo("Scenic nature walk");
+		assertThat(response.place()).isNull();
+		verify(itemRepository).save(any(ItineraryItem.class));
+	}
+
+	@Test
+	void addItemRejectsADayBeyondTheTrip() {
+		when(journeyRepository.findByIdAndUserId(JOURNEY_ID, USER)).thenReturn(Optional.of(existing));
+
+		// The stored trip is 2026-12-01 to 2026-12-05, so five days.
+		assertThatThrownBy(() -> service.addItem(USER, JOURNEY_ID,
+				new CreateItineraryItemRequest(6, 600, ItemKind.FOOD, "Dinner", null, null)))
+				.isInstanceOfSatisfying(ApiException.class, e -> {
+					assertThat(e.getStatus()).isEqualTo(HttpStatus.BAD_REQUEST);
+					assertThat(e.getCode()).isEqualTo("INVALID_DAY");
+				});
+		verify(itemRepository, never()).save(any());
+	}
+
+	@Test
+	void addItemIsNotFoundForAnotherUsersJourney() {
+		when(journeyRepository.findByIdAndUserId(JOURNEY_ID, OTHER_USER)).thenReturn(Optional.empty());
+
+		assertThatThrownBy(() -> service.addItem(OTHER_USER, JOURNEY_ID,
+				new CreateItineraryItemRequest(1, 600, ItemKind.FOOD, "Dinner", null, null)))
+				.isInstanceOfSatisfying(ApiException.class,
+						e -> assertThat(e.getCode()).isEqualTo("JOURNEY_NOT_FOUND"));
+		verify(itemRepository, never()).save(any());
+	}
+
+	@Test
+	void removeItemDeletesAnItemOfTheJourney() {
+		ItineraryItem item = new ItineraryItem(null, 1, 600, ItemKind.FOOD, "Dinner", null, null, ItemOrigin.USER);
+		UUID itemId = UUID.randomUUID();
+		when(journeyRepository.findByIdAndUserId(JOURNEY_ID, USER)).thenReturn(Optional.of(existing));
+		when(itemRepository.findByIdAndJourneyId(itemId, existing.getId())).thenReturn(Optional.of(item));
+
+		service.removeItem(USER, JOURNEY_ID, itemId);
+
+		verify(itemRepository).delete(item);
+	}
+
+	@Test
+	void removeItemIsNotFoundWhenTheItemBelongsToAnotherJourney() {
+		UUID itemId = UUID.randomUUID();
+		when(journeyRepository.findByIdAndUserId(JOURNEY_ID, USER)).thenReturn(Optional.of(existing));
+		when(itemRepository.findByIdAndJourneyId(itemId, existing.getId())).thenReturn(Optional.empty());
+
+		assertThatThrownBy(() -> service.removeItem(USER, JOURNEY_ID, itemId))
+				.isInstanceOfSatisfying(ApiException.class,
+						e -> assertThat(e.getCode()).isEqualTo("ITEM_NOT_FOUND"));
+		verify(itemRepository, never()).delete(any());
 	}
 
 	private void stubSaves() {

@@ -1,11 +1,13 @@
 package com.journey.backend.journey;
 
 import com.journey.backend.exception.ApiException;
+import com.journey.backend.journey.dto.CreateItineraryItemRequest;
 import com.journey.backend.journey.dto.CreateJourneyRequest;
 import com.journey.backend.journey.dto.ItineraryItemResponse;
 import com.journey.backend.journey.dto.JourneyResponse;
 import com.journey.backend.journey.dto.UpdateJourneyRequest;
 import java.time.LocalDate;
+import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.UUID;
 import org.springframework.http.HttpStatus;
@@ -116,6 +118,35 @@ public class JourneyService {
         journeyRepository.delete(journey);
     }
 
+    @Transactional
+    public ItineraryItemResponse addItem(UUID userId, UUID journeyId, CreateItineraryItemRequest request) {
+        Journey journey = find(userId, journeyId);
+        long days = ChronoUnit.DAYS.between(journey.getStartDate(), journey.getEndDate()) + 1;
+        if (request.day() > days) {
+            throw new ApiException(HttpStatus.BAD_REQUEST, "INVALID_DAY",
+                    "Day must be within the trip (1 to " + days + ").");
+        }
+        ItineraryItem item = new ItineraryItem(
+                journey.getId(),
+                request.day(),
+                request.startMinutes(),
+                request.kind(),
+                request.title().trim(),
+                blankToNull(request.place()),
+                blankToNull(request.description()),
+                ItemOrigin.USER);
+        return ItineraryItemResponse.from(itemRepository.save(item));
+    }
+
+    @Transactional
+    public void removeItem(UUID userId, UUID journeyId, UUID itemId) {
+        Journey journey = find(userId, journeyId);
+        ItineraryItem item = itemRepository.findByIdAndJourneyId(itemId, journey.getId())
+                .orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "ITEM_NOT_FOUND",
+                        "Itinerary item not found."));
+        itemRepository.delete(item);
+    }
+
     private JourneyResponse generate(Journey journey) {
         GeneratedJourney generated = generator.generate(journey);
         journey.applyGenerated(
@@ -156,6 +187,10 @@ public class JourneyService {
                 || request.budget() != null
                 || request.travelStyle() != null
                 || request.interests() != null;
+    }
+
+    private static String blankToNull(String value) {
+        return value == null || value.isBlank() ? null : value.trim();
     }
 
     private static String orCurrent(String value, String current) {
