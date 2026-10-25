@@ -1,6 +1,7 @@
 package com.journey.backend.journey;
 
 import jakarta.persistence.Column;
+import jakarta.persistence.Convert;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
@@ -71,6 +72,16 @@ public class Journey {
 	@Column(nullable = false)
 	private JourneyStatus status;
 
+	@Column(length = 1000)
+	private String summary;
+
+	@Column(name = "estimated_cost", precision = 12, scale = 2)
+	private BigDecimal estimatedCost;
+
+	@Convert(converter = GeneratedPlanConverter.class)
+	@Column(name = "plan_details", columnDefinition = "text")
+	private GeneratedPlan planDetails;
+
 	@Column(name = "created_at", nullable = false, updatable = false)
 	private Instant createdAt;
 
@@ -109,6 +120,13 @@ public class Journey {
 		this.budget = budget;
 		this.travelStyle = travelStyle;
 		this.interests = List.copyOf(interests);
+	}
+
+	public void applyGenerated(String summary, BigDecimal estimatedCost, GeneratedPlan planDetails) {
+		this.summary = summary;
+		this.estimatedCost = estimatedCost;
+		this.planDetails = planDetails;
+		this.status = JourneyStatus.READY;
 	}
 
 	@PrePersist

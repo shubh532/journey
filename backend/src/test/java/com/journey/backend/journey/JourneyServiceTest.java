@@ -3,10 +3,12 @@ package com.journey.backend.journey;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import com.journey.backend.budget.BudgetEngine;
 import com.journey.backend.exception.ApiException;
 import com.journey.backend.journey.dto.CreateJourneyRequest;
 import com.journey.backend.journey.dto.JourneyResponse;
@@ -21,6 +23,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.HttpStatus;
 
@@ -33,6 +36,7 @@ class JourneyServiceTest {
 
 	@Mock JourneyRepository journeyRepository;
 	@Mock ItineraryItemRepository itemRepository;
+	@Spy MockJourneyGenerator generator = new MockJourneyGenerator(new BudgetEngine());
 	@InjectMocks JourneyService service;
 
 	private Journey existing;
@@ -51,7 +55,7 @@ class JourneyServiceTest {
 
 	@Test
 	void createTrimsInputDefaultsTitleAndDedupesInterests() {
-		when(journeyRepository.save(any(Journey.class))).thenAnswer(inv -> inv.getArgument(0));
+		stubSaves();
 
 		JourneyResponse response = service.create(USER,
 				create(LocalDate.of(2026, 12, 1), LocalDate.of(2026, 12, 5), null));
@@ -60,7 +64,22 @@ class JourneyServiceTest {
 		assertThat(response.origin()).isEqualTo("Ahmedabad");
 		assertThat(response.destination()).isEqualTo("Goa");
 		assertThat(response.interests()).containsExactly("Beaches", "Food");
-		assertThat(response.status()).isEqualTo(JourneyStatus.DRAFT);
+	}
+
+	@Test
+	void createGeneratesCompleteReadyJourney() {
+		stubSaves();
+
+		JourneyResponse response = service.create(USER,
+				create(LocalDate.of(2026, 12, 1), LocalDate.of(2026, 12, 5), null));
+
+		assertThat(response.status()).isEqualTo(JourneyStatus.READY);
+		assertThat(response.summary()).contains("beaches and food");
+		assertThat(response.estimatedCost()).isPositive();
+		assertThat(response.flight().priceSource()).isEqualTo("ESTIMATED");
+		assertThat(response.stay().nights()).isEqualTo(4);
+		assertThat(response.budgetBreakdown()).hasSize(5);
+		assertThat(response.itinerary()).isNotEmpty();
 	}
 
 	@Test
@@ -86,9 +105,9 @@ class JourneyServiceTest {
 	}
 
 	@Test
-	void updateChangesOnlyProvidedFields() {
+	void updatingThePlanRegeneratesTheJourney() {
 		when(journeyRepository.findByIdAndUserId(JOURNEY_ID, USER)).thenReturn(Optional.of(existing));
-		when(journeyRepository.save(any(Journey.class))).thenAnswer(inv -> inv.getArgument(0));
+		stubSaves();
 
 		JourneyResponse response = service.update(USER, JOURNEY_ID, new UpdateJourneyRequest(
 				"Goa Getaway", null, null, null, null, 4, null, null, null, null));
@@ -98,6 +117,21 @@ class JourneyServiceTest {
 		assertThat(response.origin()).isEqualTo("Ahmedabad");
 		assertThat(response.budget()).isEqualByComparingTo("50000");
 		assertThat(response.interests()).containsExactly("Beaches", "Food");
+		assertThat(response.status()).isEqualTo(JourneyStatus.READY);
+		assertThat(response.itinerary()).isNotEmpty();
+		verify(itemRepository).deleteByJourneyId(existing.getId());
+	}
+
+	@Test
+	void updatingOnlyTheTitleKeepsGeneratedContent() {
+		when(journeyRepository.findByIdAndUserId(JOURNEY_ID, USER)).thenReturn(Optional.of(existing));
+
+		JourneyResponse response = service.update(USER, JOURNEY_ID, new UpdateJourneyRequest(
+				"Renamed", null, null, null, null, null, null, null, null, null));
+
+		assertThat(response.title()).isEqualTo("Renamed");
+		verify(itemRepository, never()).deleteByJourneyId(any());
+		verify(itemRepository, never()).saveAll(anyList());
 	}
 
 	@Test
@@ -129,5 +163,10 @@ class JourneyServiceTest {
 		assertThatThrownBy(() -> service.delete(OTHER_USER, JOURNEY_ID)).isInstanceOf(ApiException.class);
 		verify(itemRepository, never()).deleteByJourneyId(any());
 		verify(journeyRepository, never()).delete(any());
+	}
+
+	private void stubSaves() {
+		when(journeyRepository.save(any(Journey.class))).thenAnswer(inv -> inv.getArgument(0));
+		when(itemRepository.saveAll(anyList())).thenAnswer(inv -> inv.getArgument(0));
 	}
 }

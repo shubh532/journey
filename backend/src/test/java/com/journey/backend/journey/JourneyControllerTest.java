@@ -65,7 +65,8 @@ class JourneyControllerTest {
 	private static JourneyResponse response() {
 		return new JourneyResponse(ID, "Goa Journey", "Ahmedabad", "Goa", LocalDate.of(2026, 12, 1),
 				LocalDate.of(2026, 12, 5), 2, TripType.COUPLE, new BigDecimal("50000"), TravelStyle.BALANCED,
-				List.of("Beaches", "Food"), JourneyStatus.DRAFT, Instant.now(), Instant.now());
+				List.of("Beaches", "Food"), JourneyStatus.READY, "A summary.", new BigDecimal("42380"),
+				Instant.now(), Instant.now(), null, null, null, List.of());
 	}
 
 	@Test
@@ -85,7 +86,8 @@ class JourneyControllerTest {
 				.andExpect(jsonPath("$.id").value(ID.toString()))
 				.andExpect(jsonPath("$.tripType").value("Couple"))
 				.andExpect(jsonPath("$.travelStyle").value("Balanced"))
-				.andExpect(jsonPath("$.status").value("DRAFT"));
+				.andExpect(jsonPath("$.status").value("READY"))
+				.andExpect(jsonPath("$.estimatedCost").value(42380));
 	}
 
 	@Test
