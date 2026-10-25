@@ -1,10 +1,9 @@
 package com.journey.backend;
 
+import com.journey.backend.support.PostgresIntegrationTest;
 import org.junit.jupiter.api.Test;
-import org.springframework.boot.test.context.SpringBootTest;
 
-@SpringBootTest
-class BackendApplicationTests {
+class BackendApplicationTests extends PostgresIntegrationTest {
 
 	@Test
 	void contextLoads() {

@@ -1,6 +1,7 @@
 package com.journey.backend.exception;
 
 import java.util.LinkedHashMap;
+import tools.jackson.core.JacksonException;
 import java.util.Map;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -36,8 +37,19 @@ public class GlobalExceptionHandler {
 
 	@ExceptionHandler(HttpMessageNotReadableException.class)
 	ResponseEntity<ApiError> handleUnreadable(HttpMessageNotReadableException e) {
+		Map<String, String> fieldErrors = null;
+		if (e.getCause() instanceof JacksonException jackson && !jackson.getPath().isEmpty()) {
+			String field = jackson.getPath().get(jackson.getPath().size() - 1).getPropertyName();
+			if (field != null) {
+				// Only our own enum messages are echoed back; Jackson's text can name internal classes.
+				String reason = jackson.getCause() instanceof IllegalArgumentException iae
+						? iae.getMessage()
+						: "Invalid value.";
+				fieldErrors = Map.of(field, reason);
+			}
+		}
 		return ResponseEntity.badRequest().body(
-				ApiError.of("INVALID_REQUEST", "Malformed request body."));
+				new ApiError("INVALID_REQUEST", "Malformed request body.", fieldErrors));
 	}
 
 	@ExceptionHandler(DataIntegrityViolationException.class)
