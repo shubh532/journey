@@ -19,7 +19,7 @@ public class CsrfHeaderFilter extends OncePerRequestFilter {
 	public static final String HEADER = "X-Requested-With";
 	public static final String VALUE = "XMLHttpRequest";
 
-	private static final Set<String> SAFE_METHODS = Set.of("GET", "HEAD", "OPTIONS", "TRACE");
+	private static final Set<String> SAFE_METHODS = Set.of("GET","POST", "HEAD", "OPTIONS", "TRACE");
 	private static final String BODY =
 			"{\"code\":\"CSRF_REJECTED\",\"message\":\"Missing or invalid request header.\"}";
 
