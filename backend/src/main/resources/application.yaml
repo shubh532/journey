@@ -38,3 +38,7 @@ app:
       same-site: ${COOKIE_SAME_SITE:Lax}
   cors:
     allowed-origins: ${FRONTEND_ORIGIN:http://localhost:5173}
+tavily:
+  api:
+    key: ${TAVILY_API_KEY}
+    url: https://api.tavily.com/search
