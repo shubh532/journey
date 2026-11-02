@@ -22,11 +22,11 @@ import { useJourneySave } from '../components/generation/useJourneySave'
 
 function GenerationExperience({ plan, journeyId }: { plan: JourneyPlan; journeyId?: string }) {
   const navigate = useNavigate()
-  const animation = useGenerationPreview()
   const save = useJourneySave(plan, journeyId)
   const savedId = save.status === 'saved' ? save.id : null
-  // The animation is only cosmetic; the journey is ready once it has also been saved.
-  const complete = animation.complete && savedId !== null
+  // Stages are paced to the real request: the last one completes when the journey is saved.
+  const animation = useGenerationPreview(savedId !== null)
+  const complete = animation.complete
   const completedStages = animation.completedStages
   const progress = complete ? 100 : Math.min(animation.progress, 95)
   const activeStage = generationStages[Math.min(completedStages, generationStages.length - 1)]
@@ -71,7 +71,7 @@ function GenerationExperience({ plan, journeyId }: { plan: JourneyPlan; journeyI
             : `We're creating a personalized trip to ${plan.destination} based on your preferences.`}
         </Typography>
         <Typography variant="caption" color="text.secondary">
-          Estimated plan · No AI research or bookings are taking place.
+          Researched from travel sources where available · Prices are estimates and nothing is booked.
         </Typography>
       </Stack>
       {save.status === 'failed' && (
@@ -148,7 +148,7 @@ function GenerationExperience({ plan, journeyId }: { plan: JourneyPlan; journeyI
         }}
       />
       <Typography variant="caption" color="text.secondary" sx={{ display: 'block', textAlign: 'center', mt: 2 }}>
-        {complete ? 'Your journey is saved to your account. Nothing has been booked.' : 'This takes just a few moments.'}
+        {complete ? 'Your journey is saved to your account. Nothing has been booked.' : 'This can take up to a minute.'}
       </Typography>
       <Box sx={{ textAlign: 'center', mt: 2 }}>
         <Button

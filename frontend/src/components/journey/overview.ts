@@ -137,5 +137,6 @@ export function toActivity(item: ItineraryItemDto): Activity {
     place: item.place ?? '',
     description: item.description ?? '',
     kind: item.kind,
+    sourceUrl: item.sourceUrl ?? undefined,
   }
 }

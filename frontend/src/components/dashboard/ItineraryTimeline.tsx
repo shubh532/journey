@@ -1,6 +1,6 @@
-import { Box, Button, Stack, Typography } from '@mui/material'
+import { Box, Button, Link, Stack, Typography } from '@mui/material'
 import { alpha } from '@mui/material/styles'
-import { ArrowRight, ChevronRight, Hotel, MapPin, Plane, Star, Utensils, type IconNode } from 'lucide'
+import { ArrowRight, ChevronRight, ExternalLink, Hotel, MapPin, Plane, Star, Utensils, type IconNode } from 'lucide'
 import ImageWithFallback from '../layout/ImageWithFallback'
 import LucideIcon from '../LucideIcon'
 import { dayDate, formatTime, type Activity, type ActivityKind } from './itinerary'
@@ -48,6 +48,19 @@ function Timeline({ items }: { items: Activity[] }) {
                   <Typography variant="body2" sx={{ fontSize: 13, overflowWrap: 'anywhere' }}>{item.place}</Typography>
                 </Stack>
                 <Typography variant="body2" color="text.secondary" sx={{ mt: 0.25, fontSize: 13 }}>{item.description}</Typography>
+                {item.sourceUrl && (
+                  <Link
+                    href={item.sourceUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    variant="caption"
+                    aria-label={`Source for ${item.title} (opens in a new tab)`}
+                    sx={{ display: 'inline-flex', alignItems: 'center', gap: 0.5, mt: 0.5 }}
+                  >
+                    Source
+                    <LucideIcon node={ExternalLink} />
+                  </Link>
+                )}
               </Box>
               <Box
                 sx={(theme) => ({
@@ -146,7 +159,7 @@ export default function ItineraryTimeline({
         <Timeline items={items.filter((item) => item.day === selectedDay)} />
       )}
       <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mt: 2 }}>
-        Estimated plan: times and places are suggestions, not confirmed bookings. Activities you add are saved to your journey.
+        Estimated plan: times and places are suggestions, not confirmed bookings. Items with a source link were found in web research. Activities you add are saved to your journey.
       </Typography>
     </Box>
   )

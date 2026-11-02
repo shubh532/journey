@@ -11,6 +11,7 @@ export type Activity = {
   description: string
   kind: ActivityKind
   image?: string
+  sourceUrl?: string
 }
 
 export type Suggestion = Omit<Activity, 'day'>

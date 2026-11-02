@@ -12,6 +12,8 @@ export type ItineraryItemDto = {
   title: string
   place: string | null
   description: string | null
+  /** Page that backs an AI-researched item; null for template and user-added items. */
+  sourceUrl: string | null
 }
 
 export type FlightDto = {
@@ -77,10 +79,15 @@ function toRequest(plan: JourneyPlan) {
   }
 }
 
+// Creating or changing a plan runs the research agents on the server, which can take a while.
+const GENERATION_TIMEOUT_MS = 180_000
+
 export const journeyApi = {
   async create(plan: JourneyPlan) {
     try {
-      const { data } = await axiosInstance.post<JourneyDto>('/api/journeys', toRequest(plan))
+      const { data } = await axiosInstance.post<JourneyDto>('/api/journeys', toRequest(plan), {
+        timeout: GENERATION_TIMEOUT_MS,
+      })
       return data
     } catch (error) {
       throw toApiError(error)
@@ -89,7 +96,9 @@ export const journeyApi = {
 
   async update(id: string, plan: JourneyPlan) {
     try {
-      const { data } = await axiosInstance.patch<JourneyDto>(`/api/journeys/${id}`, toRequest(plan))
+      const { data } = await axiosInstance.patch<JourneyDto>(`/api/journeys/${id}`, toRequest(plan), {
+        timeout: GENERATION_TIMEOUT_MS,
+      })
       return data
     } catch (error) {
       throw toApiError(error)
