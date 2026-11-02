@@ -1,7 +1,7 @@
 import { destinations } from '../home/data'
 import type { Activity } from '../dashboard/itinerary'
 import type { JourneyPlan } from '../plan/model'
-import type { ItineraryItemDto, JourneyDto } from '../../services/journeyApi'
+import type { GenerationReportDto, ItineraryItemDto, JourneyDto } from '../../services/journeyApi'
 
 export type JourneyDay = { day: number; title: string }
 
@@ -45,6 +45,7 @@ export type JourneyOverview = {
   hotel: HotelPreview
   budgetBreakdown: BudgetItem[]
   summary: string
+  generationReport?: GenerationReportDto
 }
 
 const currencyFormatter = new Intl.NumberFormat('en-IN', {
@@ -123,6 +124,7 @@ export function fromJourneyDto(dto: JourneyDto): JourneyView | null {
       hotel: { ...stay, image: fallbackHotelImage, imageAlt: `${stay.name} exterior` },
       budgetBreakdown,
       summary,
+      generationReport: dto.generationReport,
     },
     itinerary: itinerary.map(toActivity),
   }

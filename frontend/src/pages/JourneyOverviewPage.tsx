@@ -34,6 +34,7 @@ import PageShell from '../components/layout/PageShell'
 import SideNav from '../components/layout/SideNav'
 import TabNav from '../components/layout/TabNav'
 import { fromJourneyDto, toActivity, type JourneyOverview } from '../components/journey/overview'
+import GenerationReportCard from '../components/journey/GenerationReportCard'
 import { BudgetSnapshot, FlightPreviewCard, StayPreviewCard } from '../components/journey/OverviewSections'
 import { workspaceTabs, type WorkspaceTabId } from '../components/journey/workspace'
 import { toApiError, type ApiError } from '../services/apiError'
@@ -184,6 +185,7 @@ function Dashboard({
         <Box sx={stack}>
           <DestinationMap destination={overview.plan.destination} />
           <TopHighlights overview={overview} />
+          {overview.generationReport && <GenerationReportCard report={overview.generationReport} />}
         </Box>
       </Box>
     ),

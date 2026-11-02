@@ -41,6 +41,23 @@ export type StayDto = {
   priceSource: 'ESTIMATED' | 'LIVE'
 }
 
+export type GenerationStepDto = {
+  id: 'planner' | 'research' | 'flight' | 'itinerary'
+  label: string
+  /** OK: the step's result is used. FALLBACK: a built-in estimate is used instead. */
+  status: 'OK' | 'FALLBACK'
+  detail: string
+  durationMs: number
+}
+
+/** How a plan was built. Absent for plans generated without the research pipeline and for older journeys. */
+export type GenerationReportDto = {
+  /** Server-side id of this generation, for matching a journey to the backend's pipeline log. */
+  runId: string
+  totalMs: number
+  steps: GenerationStepDto[]
+}
+
 /** List responses omit flight, stay, budgetBreakdown and itinerary; detail responses include them. */
 export type JourneyDto = {
   id: string
@@ -63,6 +80,7 @@ export type JourneyDto = {
   stay?: StayDto
   budgetBreakdown?: { label: string; amount: number }[]
   itinerary?: ItineraryItemDto[]
+  generationReport?: GenerationReportDto
 }
 
 function toRequest(plan: JourneyPlan) {
