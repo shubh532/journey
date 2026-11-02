@@ -15,7 +15,7 @@ import org.springframework.stereotype.Component;
  * No AI and no external calls; every price is marked ESTIMATED. Replaced by the AI pipeline later.
  */
 @Component
-public class MockJourneyGenerator {
+public class MockJourneyGenerator implements JourneyGenerator {
 
 	private static final String ESTIMATED = "ESTIMATED";
 	private static final int ARRIVAL_MINUTES = 8 * 60 + 5;
@@ -59,6 +59,7 @@ public class MockJourneyGenerator {
 		this.budgetEngine = budgetEngine;
 	}
 
+	@Override
 	public GeneratedJourney generate(Journey journey) {
 		int days = (int) ChronoUnit.DAYS.between(journey.getStartDate(), journey.getEndDate()) + 1;
 		int nights = Math.max(days - 1, 1);

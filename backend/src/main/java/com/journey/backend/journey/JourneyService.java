@@ -19,10 +19,10 @@ public class JourneyService {
 
     private final JourneyRepository journeyRepository;
     private final ItineraryItemRepository itemRepository;
-    private final MockJourneyGenerator generator;
+    private final JourneyGenerator generator;
 
     public JourneyService(JourneyRepository journeyRepository, ItineraryItemRepository itemRepository,
-            MockJourneyGenerator generator) {
+            JourneyGenerator generator) {
         this.journeyRepository = journeyRepository;
         this.itemRepository = itemRepository;
         this.generator = generator;
