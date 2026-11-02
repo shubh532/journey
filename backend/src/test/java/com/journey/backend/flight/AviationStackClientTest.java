@@ -88,4 +88,22 @@ class AviationStackClientTest {
 		assertThat(r.departureTime()).isEqualTo("2026-12-01T06:00:00+00:00");
 		assertThat(r.arrivalTime()).isEqualTo("2026-12-01T07:40:00+00:00");
 	}
+
+	@Test
+	void mapsA403ToPlanRestricted() {
+		assertThatThrownBy(() -> client("k", HttpStatus.FORBIDDEN,
+				"{\"error\":{\"code\":\"function_access_restricted\"}}", new AtomicReference<>())
+				.searchFlights("AMD", "GOI", "2026-12-01", 5))
+				.isInstanceOfSatisfying(ApiException.class,
+						e -> assertThat(e.getCode()).isEqualTo(AviationStackClient.PLAN_RESTRICTED));
+	}
+
+	@Test
+	void mapsARestrictedErrorBodyToPlanRestricted() {
+		assertThatThrownBy(() -> client("k", HttpStatus.OK,
+				"{\"error\":{\"code\":\"function_access_restricted\",\"message\":\"no\"}}",
+				new AtomicReference<>()).searchFlights("AMD", "GOI", "2026-12-01", 5))
+				.isInstanceOfSatisfying(ApiException.class,
+						e -> assertThat(e.getCode()).isEqualTo(AviationStackClient.PLAN_RESTRICTED));
+	}
 }

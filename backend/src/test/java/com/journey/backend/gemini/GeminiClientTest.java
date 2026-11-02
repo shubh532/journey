@@ -5,6 +5,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import com.journey.backend.exception.ApiException;
 import java.net.URI;
+import java.time.Duration;
 import java.util.concurrent.atomic.AtomicReference;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.HttpHeaders;
@@ -68,5 +69,32 @@ class GeminiClientTest {
 		assertThatThrownBy(() -> client("k", HttpStatus.OK, blocked, new AtomicReference<>()).generate("hi"))
 				.isInstanceOfSatisfying(ApiException.class,
 						e -> assertThat(e.getStatus()).isEqualTo(HttpStatus.BAD_GATEWAY));
+	}
+
+	@Test
+	void mapsATimeoutToATypedGatewayTimeout() {
+		GeminiClient slow = new GeminiClient(
+				WebClient.builder().baseUrl("http://test/v1beta").exchangeFunction(request -> Mono.never()).build(),
+				"k", "gemini-test");
+
+		assertThatThrownBy(() -> slow.generateJson("hi", new GeminiOptions(Duration.ofMillis(50), 0, 100)))
+				.isInstanceOfSatisfying(ApiException.class, e -> {
+					assertThat(e.getStatus()).isEqualTo(HttpStatus.GATEWAY_TIMEOUT);
+					assertThat(e.getCode()).isEqualTo("GEMINI_TIMEOUT");
+				});
+	}
+
+	@Test
+	void structuredOptionsSwitchThinkingOffAndCapTheReply() {
+		assertThat(GeminiOptions.structured(Duration.ofSeconds(60), 4096).jsonGenerationConfig())
+				.containsEntry("responseMimeType", "application/json")
+				.containsEntry("maxOutputTokens", 4096)
+				.containsEntry("thinkingConfig", java.util.Map.of("thinkingBudget", 0));
+	}
+
+	@Test
+	void defaultOptionsLeaveThinkingAndLengthToTheModel() {
+		assertThat(GeminiOptions.defaults().jsonGenerationConfig())
+				.containsOnlyKeys("responseMimeType");
 	}
 }
