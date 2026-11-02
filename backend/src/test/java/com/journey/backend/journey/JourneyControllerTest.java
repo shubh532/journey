@@ -67,7 +67,7 @@ class JourneyControllerTest {
 		return new JourneyResponse(ID, "Goa Journey", "Ahmedabad", "Goa", LocalDate.of(2026, 12, 1),
 				LocalDate.of(2026, 12, 5), 2, TripType.COUPLE, new BigDecimal("50000"), TravelStyle.BALANCED,
 				List.of("Beaches", "Food"), JourneyStatus.READY, "A summary.", new BigDecimal("42380"),
-				Instant.now(), Instant.now(), null, null, null, List.of());
+				Instant.now(), Instant.now(), null, null, null, List.of(), null);
 	}
 
 	@Test
@@ -176,7 +176,7 @@ class JourneyControllerTest {
 	void addItemReturns201WithLowercaseKind() throws Exception {
 		UUID itemId = UUID.randomUUID();
 		when(journeyService.addItem(eq(USER), eq(ID), any())).thenReturn(new ItineraryItemResponse(
-				itemId, 2, 600, ItemKind.ACTIVITY, "Scenic nature walk", null, null));
+				itemId, 2, 600, ItemKind.ACTIVITY, "Scenic nature walk", null, null, null));
 
 		mvc.perform(post("/api/journeys/" + ID + "/items").with(user()).header("X-Requested-With", XHR)
 						.contentType(MediaType.APPLICATION_JSON)

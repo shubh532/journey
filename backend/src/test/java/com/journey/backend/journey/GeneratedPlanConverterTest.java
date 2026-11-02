@@ -30,4 +30,29 @@ class GeneratedPlanConverterTest {
 		assertThat(converter.convertToDatabaseColumn(null)).isNull();
 		assertThat(converter.convertToEntityAttribute(null)).isNull();
 	}
+
+	@Test
+	void roundTripsTheGenerationReport() {
+		GenerationReport report = new GenerationReport("ab12cd34", 41230, List.of(
+				new GenerationReport.Step("planner", "Understanding your trip", GenerationReport.Status.OK,
+						"5 areas to explore", 3100),
+				new GenerationReport.Step("flight", "Finding flights", GenerationReport.Status.FALLBACK,
+						"Live schedule unavailable", 120)));
+		GeneratedPlan plan = new GeneratedPlan(null, null, List.of(new BudgetLine("Flights", 1)), report);
+
+		String json = converter.convertToDatabaseColumn(plan);
+
+		assertThat(json).contains("\"runId\":\"ab12cd34\"", "\"status\":\"FALLBACK\"");
+		assertThat(converter.convertToEntityAttribute(json)).isEqualTo(plan);
+	}
+
+	@Test
+	void readsPlansSavedBeforeReportsExisted() {
+		String legacy = "{\"flight\":null,\"stay\":null,\"budgetBreakdown\":[{\"label\":\"Flights\",\"amount\":1}]}";
+
+		GeneratedPlan plan = converter.convertToEntityAttribute(legacy);
+
+		assertThat(plan.report()).isNull();
+		assertThat(plan.budgetBreakdown()).hasSize(1);
+	}
 }

@@ -11,7 +11,8 @@ public record ItineraryItemResponse(
         ItemKind kind,
         String title,
         String place,
-        String description) {
+        String description,
+        String sourceUrl) {
 
     public static ItineraryItemResponse from(ItineraryItem item) {
         return new ItineraryItemResponse(
@@ -21,7 +22,8 @@ public record ItineraryItemResponse(
                 item.getKind(),
                 item.getTitle(),
                 item.getPlace(),
-                item.getDescription()
+                item.getDescription(),
+                item.getSourceUrl()
 			);
     }
 }

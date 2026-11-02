@@ -3,6 +3,7 @@ package com.journey.backend.journey.dto;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.journey.backend.budget.BudgetLine;
 import com.journey.backend.journey.GeneratedPlan;
+import com.journey.backend.journey.GenerationReport;
 import com.journey.backend.journey.Journey;
 import com.journey.backend.journey.JourneyStatus;
 import com.journey.backend.journey.TravelStyle;
@@ -38,7 +39,8 @@ public record JourneyResponse(
         GeneratedPlan.Flight flight,
         GeneratedPlan.Stay stay,
         List<BudgetLine> budgetBreakdown,
-        List<ItineraryItemResponse> itinerary) {
+        List<ItineraryItemResponse> itinerary,
+        GenerationReport generationReport) {
 
     public static JourneyResponse from(Journey journey) {
         return build(journey, null);
@@ -72,7 +74,8 @@ public record JourneyResponse(
                 plan == null ? null : plan.flight(),
                 plan == null ? null : plan.stay(),
                 plan == null ? null : plan.budgetBreakdown(),
-                itinerary
+                itinerary,
+                plan == null ? null : plan.report()
         );
     }
 }
