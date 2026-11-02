@@ -53,3 +53,15 @@ aviationstack:
   api:
     key: ${AVIATIONSTACK_API_KEY:}
     url: http://api.aviationstack.com/v1/flights
+
+logging:
+  pattern:
+    # run = id of one journey generation, so interleaved agent lines can be told apart
+    level: "%5p [run=%X{run:-}]"
+  level:
+    # DEBUG logs prompts and API responses (truncated). API keys are never logged.
+    # Quieten with e.g. LOGGING_LEVEL_COM_JOURNEY_BACKEND_AGENT=INFO
+    com.journey.backend.agent: DEBUG
+    com.journey.backend.gemini: DEBUG
+    com.journey.backend.tavily: DEBUG
+    com.journey.backend.flight: DEBUG

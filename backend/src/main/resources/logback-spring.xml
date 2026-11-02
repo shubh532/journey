@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Console logging stays as Spring Boot configures it. On top of that, everything the generation pipeline
+  logs (agents, Gemini, Tavily, AviationStack) is also written to its own file, logs/pipeline.log, so a
+  run can be read without the rest of the application's output.
+
+  Useful searches in that file:
+    one generation       grep "run=ab12cd34"
+    where a step degraded grep "FALLBACK"
+    the end-of-run recap  grep -A8 "PIPELINE SUMMARY"
+    raw prompts/replies   grep -E "request payload|response text"
+
+  Levels come from logging.level.* in application.yaml. Change the location with PIPELINE_LOG_FILE.
+-->
+<configuration>
+	<include resource="org/springframework/boot/logging/logback/defaults.xml"/>
+	<include resource="org/springframework/boot/logging/logback/console-appender.xml"/>
+
+	<property name="PIPELINE_LOG" value="${PIPELINE_LOG_FILE:-logs/pipeline.log}"/>
+
+	<appender name="PIPELINE_FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
+		<file>${PIPELINE_LOG}</file>
+		<encoder>
+			<pattern>%d{yyyy-MM-dd HH:mm:ss.SSS} %-5level [run=%X{run:-}] %-20logger{0} | %msg%n</pattern>
+		</encoder>
+		<rollingPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
+			<fileNamePattern>${PIPELINE_LOG}.%d{yyyy-MM-dd}.%i.gz</fileNamePattern>
+			<maxFileSize>20MB</maxFileSize>
+			<maxHistory>14</maxHistory>
+			<totalSizeCap>200MB</totalSizeCap>
+		</rollingPolicy>
+	</appender>
+
+	<!-- additivity stays on, so these lines still reach the console too -->
+	<logger name="com.journey.backend.agent">
+		<appender-ref ref="PIPELINE_FILE"/>
+	</logger>
+	<logger name="com.journey.backend.gemini">
+		<appender-ref ref="PIPELINE_FILE"/>
+	</logger>
+	<logger name="com.journey.backend.tavily">
+		<appender-ref ref="PIPELINE_FILE"/>
+	</logger>
+	<logger name="com.journey.backend.flight">
+		<appender-ref ref="PIPELINE_FILE"/>
+	</logger>
+
+	<root level="INFO">
+		<appender-ref ref="CONSOLE"/>
+	</root>
+</configuration>
