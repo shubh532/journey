@@ -75,6 +75,12 @@ public class ItineraryItem {
 		this.origin = origin;
 	}
 
+	public ItineraryItem(UUID journeyId, int day, int startMinutes, ItemKind kind, String title, String place,
+			String description, String sourceUrl, ItemOrigin origin) {
+		this(journeyId, day, startMinutes, kind, title, place, description, origin);
+		this.sourceUrl = sourceUrl;
+	}
+
 	@PrePersist
 	void onCreate() {
 		createdAt = Instant.now();

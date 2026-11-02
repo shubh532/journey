@@ -39,6 +39,10 @@ app:
   cors:
     allowed-origins: ${FRONTEND_ORIGIN:http://localhost:5173}
 
+journey:
+  # ai = multi-agent pipeline (falls back to the mock per agent); mock = deterministic template only
+  generator: ${JOURNEY_GENERATOR:ai}
+
 gemini:
   api-key: ${GEMINI_API_KEY}
   base-url: https://generativelanguage.googleapis.com/v1beta
